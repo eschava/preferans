@@ -14,6 +14,21 @@ node server.mjs        # http://localhost:8080
 Online table: `http://localhost:8080/?room=any-name` — open the link on several
 devices; whoever joins takes a seat.
 
+### Hosting
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/eschava/preferans)
+
+The repo carries a `render.yaml`, so the button above sets the service up on
+[Render](https://render.com) in one click: it builds with `npm install` and
+starts with `npm start`, and the server takes its port from `PORT`. There is
+nothing else to configure — the project has no runtime dependencies and no
+database.
+
+On Render's free plan the instance sleeps after a spell of inactivity and is
+restarted on the next request. Rooms live in the server's memory, so an online
+table does not survive that; a game against bots runs entirely in the browser
+and is unaffected.
+
 Checking the rules and the bots:
 
 ```bash
