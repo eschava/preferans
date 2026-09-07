@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preferans</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="apptitle"></h1>
+    <div id="status"></div>
+    <div id="menuwrap">
+      <button id="menubtn" aria-haspopup="true" aria-expanded="false">☰</button>
+      <div id="menu" hidden>
+        <button id="showpulka"></button>
+        <button id="newgame"></button>
+        <div id="langs"></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="table">
+      <div class="seat opp" id="seat1"></div>
+      <div id="center">
+        <div id="talon"></div>
+        <div id="trick"></div>
+        <div id="lasttrick"></div>
+        <dialog id="biddlg">
+          <h2 id="bidtitle"></h2>
+          <div class="scroller">
+            <button class="nav" id="bidprev">‹</button>
+            <div class="strip" id="bidstrip"></div>
+            <button class="nav" id="bidnext">›</button>
+          </div>
+          <div class="row" id="bidactions"></div>
+        </dialog>
+
+        <dialog id="askdlg">
+          <h2 id="asktitle"></h2>
+          <div id="asktext"></div>
+          <div class="row" id="askactions"></div>
+        </dialog>
+      </div>
+      <div class="seat opp" id="seat2"></div>
+      <div class="seat me" id="seat0"></div>
+    </section>
+
+    <aside><div id="log"></div></aside>
+  </main>
+
+  <div id="actions"></div>
+</div>
+
+<dialog id="pulkadlg">
+  <div id="points"></div>
+  <div id="score"></div>
+  <div id="history"></div>
+  <div class="row" id="pulkaactions"></div>
+</dialog>
+
+<script type="module" src="src/ui.js"></script>
+</body>
+</html>

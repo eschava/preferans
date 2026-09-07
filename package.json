@@ -1,0 +1,13 @@
+{
+  "name": "preferans",
+  "version": "1.0.0",
+  "description": "Three-handed Preferans in the browser, with bots that play by double-dummy search",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test/engine.test.mjs && node test/solver.test.mjs"
+  }
+}
