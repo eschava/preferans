@@ -127,8 +127,10 @@ on the fly — together with the rank letters on the cards (A/K/Q/J against
 - **All-pass** is played with the talon face up: the first talon card is turned
   before the first trick and the second before the second, and its suit dictates
   the lead (its rank does not count — the trick goes to the highest card of that
-  suit). Anyone void discards freely. From the third trick the lead is free and
-  the spent talon cards are cleared away.
+  suit). Anyone void discards freely. From the third trick the suit is free and
+  the spent talon cards are cleared away. The **first three tricks are all led
+  by the hand left of the dealer**, whoever takes them; only from the fourth
+  does the taker lead.
 - **Misère** sits between 8NT and 9♠ — only a bid of nine beats it. It is a
   binding bid: misère may only be a player's **own first** call, and having won
   the auction with it there is no way out — after the talon all that is left is

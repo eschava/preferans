@@ -314,6 +314,28 @@ function cardsIn(x, out = new Set()) {
   assert.equal(g.score.whists[2][0], 0);             // passer records nothing
 }
 
+// All-pass: the hand left of the dealer leads the first three tricks, whoever
+// takes them; from the fourth the taker leads as usual.
+{
+  setRandom(seeded(77));
+  const g = newGame();
+  const eldest = (g.dealer + 1) % 3;
+  while (g.phase === 'bidding') applyAction(g, g.turn, { type: 'bid', contract: null });
+  assert.ok(g.contract.raspas, 'nobody bid, so it is an all-pass deal');
+
+  const rows = [];
+  while (g.phase === 'play') {
+    const lead = g.trickLead;
+    for (let k = 0; k < 3; k++) applyAction(g, g.turn, { type: 'play', card: legalCards(g, g.turn)[0] });
+    rows.push({ lead, winner: g.lastTrick.winner });
+  }
+  assert.deepEqual(rows.slice(0, 3).map((r) => r.lead), [eldest, eldest, eldest]);
+  assert.ok(rows.slice(0, 3).some((r) => r.winner !== eldest),
+    'and the rule bites: somebody else took one of those tricks');
+  for (let i = 3; i < rows.length; i++)
+    assert.equal(rows[i].lead, rows[i - 1].winner, `trick ${i + 1} is led by the taker of the one before`);
+}
+
 // The bid may stand above the suit the hand wants, and the contract may not go
 // below the bid. Naming the bid itself made a declarer play a suit he did not
 // hold — and discard the two cards of it he had.

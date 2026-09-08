@@ -159,6 +159,11 @@ export function trickWinner(trick, trump, led) {
   return trick.reduce((a, b) => (weight(b.card) > weight(a.card) ? b : a)).player;
 }
 
+// All-pass: the hand left of the dealer leads the first three tricks, whoever
+// takes them; only from the fourth does the taker lead.
+export const leadOf = (g, winner) =>
+  (g.contract && g.contract.raspas && g.trickNo < 3) ? (g.dealer + 1) % 3 : winner;
+
 // All-pass: the first two tricks must be led in the suit of the face-up talon
 // card — first card for the first trick, second for the second. Its rank is
 // irrelevant; the trick goes to the highest card of that suit.
@@ -325,8 +330,11 @@ function doPlay(g, seat, card) {
   g.log.push({ k: forced ? 'log.trickForced' : 'log.trick',
     p: { n: g.trickNo, suit: forced, cards: g.trick.map((x) => x.card), player: w } });
   g.trick = [];
-  g.trickLead = w;
-  g.turn = w;
+  // In an all-pass deal the first three tricks are all led by the hand left of
+  // the dealer, whoever took them; only from the fourth does the taker lead.
+  const next = leadOf(g, w);
+  g.trickLead = next;
+  g.turn = next;
   if (g.trickNo === 10) scoreDeal(g);
   return g;
 }
@@ -336,7 +344,7 @@ function doPlay(g, seat, card) {
 // A pool win fills the winner's own pool up to the target. Whatever is over the
 // top is not lost: once your own pool is closed you first "help" — close the
 // other players' pools,every point of help written as 10 whists against the player
-// helped — and only what nobody can take writes off your own mountain.
+// player helped — and only what nobody can take writes off your own mountain.
 function writePool(g, seat, amount, lines) {
   const S = g.score;
   let left = amount;

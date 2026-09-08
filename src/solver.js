@@ -113,7 +113,8 @@ function search(st, alpha, beta, depth) {
       const w = winnerOf(st, seat, card);
       const add = st.count[w] ? 1 : 0;
       const sN = st.n, s0c = st.p0card, s1c = st.p1card, s0s = st.p0seat, s1s = st.p1seat;
-      st.n = 0; st.turn = w; st.trickNo++;
+      st.n = 0; st.trickNo++;
+      st.turn = st.lead(st.trickNo, w);
       st.ledSuit = st.forced(st.trickNo);
       value = add + search(st, alpha - add, beta - add, depth + 1);
       st.trickNo--; st.n = sN; st.p0card = s0c; st.p1card = s1c; st.p0seat = s0s; st.p1seat = s1s;
@@ -187,7 +188,7 @@ export function ddValue({ hands, turn, trump, countSeats, maxSeats }) {
     trickNo: 0, ledSuit: -1, n: 0, p0seat: 0, p0card: 0, p1seat: 0, p1card: 0,
     count: [0, 1, 2].map((s) => countSeats.includes(s)),
     max: [0, 1, 2].map((s) => maxSeats.includes(s)),
-    forced: () => -1, tt: new Map(), ttLimit: Infinity,
+    forced: () => -1, lead: (n, w) => w, tt: new Map(), ttLimit: Infinity,
   };
   return exactValue(st, 0);
 }
@@ -217,6 +218,11 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
     return su === null ? -1 : SUITS.indexOf(su);
   };
 
+  // an all-pass deal keeps the lead with the hand left of the dealer for three
+  // tricks, whoever takes them (engine.leadOf)
+  const eldest = v.contract.raspas ? (v.dealer + 1) % 3 : -1;
+  const leadFor = (n, w) => (eldest >= 0 && n < 3 ? eldest : w);
+
   const totals = new Map(legal.map((c) => [c, 0]));
   const pool = unseenCards(v);
   nodes = 0;
@@ -241,7 +247,7 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
       const st = {
         hands: masks, turn: (me + 1) % 3, trumpS, trickNo: v.trickNo, ledSuit: ledIdx,
         n: played.length, p0seat: 0, p0card: 0, p1seat: 0, p1card: 0,
-        count: countArr, max: maxArr, forced: forcedIdx, tt, ttLimit,
+        count: countArr, max: maxArr, forced: forcedIdx, lead: leadFor, tt, ttLimit,
       };
       st.p0seat = played[0].seat; st.p0card = played[0].card;
       if (played.length >= 2) { st.p1seat = played[1].seat; st.p1card = played[1].card; }
@@ -249,7 +255,7 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
       if (played.length === 3) {
         const w = winnerOf(st, played[2].seat, played[2].card);
         const add = countArr[w] ? 1 : 0;
-        st.n = 0; st.turn = w; st.trickNo++; st.ledSuit = forcedIdx(st.trickNo);
+        st.n = 0; st.trickNo++; st.turn = leadFor(st.trickNo, w); st.ledSuit = forcedIdx(st.trickNo);
         value = add + exactValue(st, Math.max(0, guess - add));
       } else {
         value = exactValue(st, guess);
