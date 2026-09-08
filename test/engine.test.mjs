@@ -204,7 +204,7 @@ function cardsIn(x, out = new Set()) {
   assert.ok(g.log.some((l) => l.k === 'log.trickForced'));
 }
 
-// a closed pool spills over: first onto the winner's own mountain, then as help
+// a closed pool spills over: first as help to the others, then onto the own mountain
 {
   setRandom(seeded(61));
   const g = newGame({ poolTarget: 10 });
@@ -215,10 +215,17 @@ function cardsIn(x, out = new Set()) {
   applyAction(g, 1, { type: 'whist', whist: false });
   applyAction(g, 2, { type: 'whist', whist: false });   // nobody whists: the game of 8 is written
   assert.equal(g.score.pool[0], 10, 'own pool fills to the target first');
-  assert.equal(g.score.mountain[0], 0, 'the next 4 write off the own mountain');
-  assert.equal(g.score.pool[2], 5, 'the remaining 2 help the seat that is short');
-  assert.equal(g.score.whists[0][2], 20, 'help is written as 10 whists a point');
+  assert.equal(g.score.pool[2], 9, 'the surplus 6 goes to the seat that is short');
+  assert.equal(g.score.whists[0][2], 60, 'help is written as 10 whists a point');
   assert.equal(g.score.pool[1], 10, 'a closed pool takes no help');
+  assert.equal(g.score.mountain[0], 4, 'the own mountain is written off last, out of what is left');
+
+  // nobody left to help: what remains does write off the own mountain
+  g.score.pool = [10, 10, 10]; g.score.mountain = [4, 0, 0];
+  g.phase = 'whist'; g.turn = 1; g.whistDecl = [null, null, null]; g.conceded = false;
+  applyAction(g, 1, { type: 'whist', whist: false });
+  applyAction(g, 2, { type: 'whist', whist: false });
+  assert.equal(g.score.mountain[0], 0, 'with every pool closed the win writes off the own mountain');
 }
 
 // whist shortfall: the whisters owe their tricks or write into the mountain

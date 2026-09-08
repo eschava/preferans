@@ -80,7 +80,12 @@ The whist zones say in small print who writes on whom ("West → You").
 Everywhere — pool, mountain and whists — entries are written from the edge of
 their cell, the way a hand writes on paper, not centred: top to bottom in the
 narrow zones, left to right in the wide ones. Every cell reads from the seat it
-belongs to. Entries are separated by dots: `4·6·12·22·36`.
+belongs to. Entries are separated by dots: `4·6·12·22·36`. A run that fills its
+line does not spill over the drawing: whists carry on the next line down, the
+mountain on the line **above** — it grows upward, each line stepping in along
+the slanting side of the sector, so a long game builds a pyramid. When even that
+is not enough the hand writes smaller. A pool that is closed gets a `>>` after
+its last number.
 
 Approximate points are not written into the drawing — they sit in a separate
 table above the sheet, in the same order as the seats (left opponent, you,
@@ -153,9 +158,9 @@ on the fly — together with the rank letters on the cards (A/K/Q/J against
   misère is 10 into the mountain; an all-pass deal is 2 into the mountain per
   trick.
 - **The pool does not overflow**: a win first fills the winner's own pool up to
-  the target, the surplus writes off their own mountain, and the rest becomes
-  **help** — it closes the other players' pools, and every point of help is
-  written as 10 whists against the player helped.
+  the target. The surplus goes to **help** — it closes the other players' pools,
+  every point written as 10 whists against the player helped — and only what
+  nobody can take writes off the winner's own mountain.
 - Settlement: `10×(pool − mountain) + whists`, normalised by the mean — the three
   scores always add up to 0, so it is clear who owes whom. Values can be
   fractional.

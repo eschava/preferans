@@ -114,6 +114,7 @@ const uk = {
   'score.raspas': '{player}: +{n} у гору ({tricks} вз.)',
   'score.poolAdd': '<b>{player}</b> +{n} у пулю',
   'score.mountainAdd': '<b>{player}</b> +{n} у гору',
+  'score.mountainLess': '<b>{player}</b> −{n} з гори',
   'score.whistsAdd': '<b>{player}</b> +{n} вістів',
 
   'err.notYourTurn': 'Не ваш хід',
@@ -251,6 +252,7 @@ const en = {
   'score.raspas': '{player}: +{n} to the mountain ({tricks} tricks)',
   'score.poolAdd': '<b>{player}</b> +{n} pool',
   'score.mountainAdd': '<b>{player}</b> +{n} mountain',
+  'score.mountainLess': '<b>{player}</b> −{n} off the mountain',
   'score.whistsAdd': '<b>{player}</b> +{n} whists',
 
   'err.notYourTurn': 'Not your turn',

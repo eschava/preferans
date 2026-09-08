@@ -334,16 +334,14 @@ function doPlay(g, seat, card) {
 // ---- scoring ---------------------------------------------------------------
 
 // A pool win fills the winner's own pool up to the target. Whatever is over the
-// top is not lost: it first writes off the winner's own mountain, and the rest
-// becomes "help" — it closes the other players' pools, and every point of help
-// is written as 10 whists against the player it helped.
+// top is not lost: once your own pool is closed you first "help" — close the
+// other players' pools,every point of help written as 10 whists against the player
+// helped — and only what nobody can take writes off your own mountain.
 function writePool(g, seat, amount, lines) {
   const S = g.score;
   let left = amount;
   const own = Math.min(Math.max(0, g.poolTarget - S.pool[seat]), left);
   if (own) { S.pool[seat] += own; left -= own; lines.push({ k: 'score.toPool', p: { player: seat, n: own } }); }
-  const off = Math.min(S.mountain[seat], left);
-  if (off) { S.mountain[seat] -= off; left -= off; lines.push({ k: 'score.offMountain', p: { player: seat, n: off } }); }
   for (let k = 1; k < 3 && left > 0; k++) {
     const other = (seat + k) % 3;
     const give = Math.min(Math.max(0, g.poolTarget - S.pool[other]), left);
@@ -353,6 +351,8 @@ function writePool(g, seat, amount, lines) {
     left -= give;
     lines.push({ k: 'score.help', p: { player: seat, to: other, n: give, whists: give * 10 } });
   }
+  const off = Math.min(S.mountain[seat], left);
+  if (off) { S.mountain[seat] -= off; left -= off; lines.push({ k: 'score.offMountain', p: { player: seat, n: off } }); }
 }
 
 function scoreDeal(g) {
