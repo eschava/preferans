@@ -1,0 +1,23 @@
+# Tells Render to deploy after a push to main. The hook URL is a credential and
+# never lives here: it is a repository secret, and the job skips quietly while
+# that secret is unset, so adding the workflow first breaks nothing.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the Render deploy hook
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK is not set — nothing to trigger."
+            exit 0
+          fi
+          curl -fsS "$HOOK" > /dev/null
+          echo "Deploy triggered."
