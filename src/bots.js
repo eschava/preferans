@@ -69,14 +69,34 @@ export function chooseDeclare(v) {
   if (v.highBid && v.highBid.misere)                  // won the auction on misère, so misère it is
     return { type: 'declare', discard: pickDiscard(hand, null), contract: { misere: true } };
 
-  const [suit, est] = bestTrump(hand);
-  const trump = suit;
-  const discard = pickDiscard(hand, trump);
-  const kept = hand.filter((c) => !discard.includes(c));
-  const level = Math.min(10, Math.max(6, Math.round(expectedTricks(kept, trump))));
-  let contract = { level, suit: trump };
-  if (contractRank(contract) < contractRank(v.highBid)) contract = v.highBid;   // must honour the bid
-  return { type: 'declare', discard, contract };
+  // What this trump is worth: the discard it wants, the level it can carry, and
+  // what the auction makes it cost — a bid may stand above the suit, and the
+  // contract may never go below the bid.
+  const plan = (suit) => {
+    const trump = suit === 'nt' ? null : suit;
+    const discard = pickDiscard(hand, trump);
+    const kept = hand.filter((c) => !discard.includes(c));
+    const est = expectedTricks(kept, trump);
+    const want = Math.min(10, Math.max(6, Math.round(est)));
+    let level = want;
+    while (level < 10 && contractRank({ level, suit }) < contractRank(v.highBid)) level++;
+    return { discard, est, level, paid: level - want, contract: { level, suit } };
+  };
+
+  let best = plan(bestTrump(hand)[0]);
+  // A raise in the auction is often just a step up the ladder, so the bid can
+  // end up above the suit the hand actually wants. Paying for that in levels is
+  // rarely right, and naming the bid itself is worse — that is how a declarer
+  // comes to play a suit he does not hold. So weigh every trump at the cheapest
+  // level that honours the bid and keep the one closest to being made; the
+  // discard is the one made for THAT trump, not for a suit that lost.
+  if (best.paid) {
+    const slack = (p) => p.est - p.level;
+    best = [...SUITS, 'nt'].map(plan)
+      .filter((p) => contractRank(p.contract) >= contractRank(v.highBid))
+      .sort((a, b) => slack(b) - slack(a))[0];
+  }
+  return { type: 'declare', discard: best.discard, contract: best.contract };
 }
 
 // Drop the two least useful cards: never trump, prefer emptying a short side suit.

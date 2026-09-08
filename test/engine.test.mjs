@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   makeDeck, setRandom, newGame, applyAction, viewFor, legalCards, trickWinner,
   contractRank, contractValue, finalScores, canRepeat, sortHand, controllerOf,
-  forcedSuit, RASPAS_TRICK,
+  forcedSuit, suitOf, RASPAS_TRICK,
 } from '../src/engine.js';
 import { botAction } from '../src/bots.js';
 
@@ -312,6 +312,24 @@ function cardsIn(x, out = new Set()) {
   assert.equal(g.score.mountain[0], 12);             // 3 short x value 4
   assert.equal(g.score.whists[1][0], 12);            // whister: 3 tricks x 4
   assert.equal(g.score.whists[2][0], 0);             // passer records nothing
+}
+
+// The bid may stand above the suit the hand wants, and the contract may not go
+// below the bid. Naming the bid itself made a declarer play a suit he did not
+// hold — and discard the two cards of it he had.
+{
+  const hand = ['sA', 's10', 'cA', 'cK', 'cJ', 'c8', 'c7', 'dQ', 'd7', 'hK', 'hJ', 'h8'];
+  const declare = (highBid) => botAction({
+    phase: 'talon', you: 2, hands: [null, null, hand], highBid,
+  });
+  const free = declare({ level: 6, suit: 's' });
+  assert.deepEqual(free.contract, { level: 6, suit: 'c' }, 'unforced, it names its own five-card suit');
+
+  const forced = declare({ level: 6, suit: 'd' });                 // clubs are below the bid now
+  const trump = forced.contract.suit;
+  assert.ok(contractRank(forced.contract) >= contractRank({ level: 6, suit: 'd' }), 'the bid is honoured');
+  assert.ok(hand.filter((c) => suitOf(c) === trump).length >= 3, 'it declares a suit it actually holds');
+  assert.equal(forced.discard.filter((c) => suitOf(c) === trump).length, 0, 'and keeps every trump');
 }
 
 console.log(`ok — ${deals} deals (${played} played out, ${raspas} all-pass, ${misere} misère), ${RASPAS_TRICK} per trick in an all-pass deal`);
