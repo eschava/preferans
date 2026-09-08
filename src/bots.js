@@ -123,8 +123,13 @@ export function chooseWhist(v) {
   const duty = WHIST_DUTY[v.contract.level] ?? 0;
   const partner = defenderPartner(v);
   const alone = partner !== null && v.whistDecl[partner] === false;
-  const pair = est + (alone ? 0 : 2.0);          // the partner takes two on average
-  return { type: 'whist', whist: pair >= duty - 0.3 };
+  // The duty is measured on what the DEFENCE takes, not on what the whister
+  // takes alone: a partner who passed still plays, and on a half whist their
+  // hand goes face up for the whister to play. So their tricks count either
+  // way. Being alone does not remove them — it only doubles the share of a
+  // shortfall, which is worth a little caution, not two whole tricks.
+  const pair = est + 2.0;                        // the partner takes two on average
+  return { type: 'whist', whist: pair >= duty - (alone ? 0 : 0.3) };
 }
 
 const defenderPartner = (v) => {
