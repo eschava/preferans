@@ -3,5 +3,7 @@ services:
     name: preferans
     runtime: node
     plan: free
+    branch: main          # pushes here deploy
+    autoDeploy: true      # Render's default, written down so it survives a re-create
     buildCommand: npm install
     startCommand: npm start
