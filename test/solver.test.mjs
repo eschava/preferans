@@ -110,7 +110,8 @@ for (let n = 0; n < 90; n++) {
     vals.set(c, val);
     if (val > bestVal) bestVal = val;
   }
-  const chosen = bestCard(view, { samples: 1 });
+  // a tiny table forces the mid-search wipe: it may cost speed, never the answer
+  const chosen = bestCard(view, { samples: 1, ttLimit: n % 3 === 0 ? 64 : 400000 });
   assert.equal(vals.get(chosen), bestVal,
     `deal ${n}: solver played ${chosen} worth ${vals.get(chosen)}, best is ${bestVal}`);
   picks++;

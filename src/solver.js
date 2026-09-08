@@ -126,6 +126,7 @@ function search(st, alpha, beta, depth) {
     else { if (value < best) { best = value; bestMove = card; } if (best < beta) beta = best; }
     if (alpha >= beta) break;
   }
+  if (st.tt.size >= st.ttLimit) st.tt.clear();     // a wiped table costs speed, not correctness
   st.tt.set(key, { v: best, f: best <= a0 ? UPPER : best >= b0 ? LOWER : EXACT, m: bestMove });
   return best;
 }
@@ -186,7 +187,7 @@ export function ddValue({ hands, turn, trump, countSeats, maxSeats }) {
     trickNo: 0, ledSuit: -1, n: 0, p0seat: 0, p0card: 0, p1seat: 0, p1card: 0,
     count: [0, 1, 2].map((s) => countSeats.includes(s)),
     max: [0, 1, 2].map((s) => maxSeats.includes(s)),
-    forced: () => -1, tt: new Map(),
+    forced: () => -1, tt: new Map(), ttLimit: Infinity,
   };
   return exactValue(st, 0);
 }
@@ -228,7 +229,6 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
     }
     const hands = dealHidden(v, pool.slice());
     const tt = new Map();                        // shared by every root move of this sample
-    if (tt.size > ttLimit) tt.clear();
     const baseMasks = hands.map((h) => h.reduce((m, c) => m | (1 << idx(c)), 0));
     let guess = 5;
     for (const card of legal) {
@@ -241,7 +241,7 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
       const st = {
         hands: masks, turn: (me + 1) % 3, trumpS, trickNo: v.trickNo, ledSuit: ledIdx,
         n: played.length, p0seat: 0, p0card: 0, p1seat: 0, p1card: 0,
-        count: countArr, max: maxArr, forced: forcedIdx, tt,
+        count: countArr, max: maxArr, forced: forcedIdx, tt, ttLimit,
       };
       st.p0seat = played[0].seat; st.p0card = played[0].card;
       if (played.length >= 2) { st.p1seat = played[1].seat; st.p1card = played[1].card; }
