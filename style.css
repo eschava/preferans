@@ -189,12 +189,22 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
 
 
 @media (max-width: 860px) {
-  main { grid-template-columns: 1fr; }
+  /* One column, and the log goes last — below the hand and below the buttons,
+     which is where a phone wants it. `display: contents` lifts the table and the
+     log out of <main> so both can be ordered against the action bar. */
+  #app { display: flex; flex-direction: column; gap: 12px; }
+  main { display: contents; }
+  #table { order: 1; }
+  #actions { order: 2; }
+  aside { order: 3; }
   /* Two seats side by side, each half the width. The .wide-seats rule above is
      an id+class selector, so it must be repeated here or it wins on specificity
      and puts back a third column — an empty strip down the right of the phone. */
   #table, #table.wide-seats {
     grid-template-areas: "s1 s2" "center center" "me me"; grid-template-columns: 1fr 1fr;
+    /* the 210px floor is for the desktop layout, where the seats flank the
+       centre; stacked on a phone they only need their own height */
+    grid-template-rows: auto auto auto;
   }
   /* Face-up hands are the tallest thing on the page, so on a phone the seat
      panels drop what they do not need: the placeholder that reserves room for a

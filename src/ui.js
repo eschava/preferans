@@ -179,7 +179,9 @@ function renderCenter() {
 }
 
 function renderLog() {
-  if (view.deal !== logDeal) { logDeal = view.deal; logSeen = 0; logLines.push({ deal: view.deal }); }
+  // the log keeps the deal being played and nothing older: what happened two
+  // deals ago is what the score sheet is for
+  if (view.deal !== logDeal) { logDeal = view.deal; logSeen = 0; logLines = [{ deal: view.deal }]; }
   if (view.log.length > logSeen) { logLines.push(...view.log.slice(logSeen)); logSeen = view.log.length; }
   $('log').innerHTML = logLines.slice(-40)
     .map((l) => `<div>${l.deal ? t('log.dealHeader', { deal: l.deal }) : entryText(view, l)}</div>`)
