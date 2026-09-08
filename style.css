@@ -190,7 +190,21 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
 
 @media (max-width: 860px) {
   main { grid-template-columns: 1fr; }
-  #table { grid-template-areas: "s1 s2" "center center" "me me"; grid-template-columns: 1fr 1fr; }
+  /* Two seats side by side, each half the width. The .wide-seats rule above is
+     an id+class selector, so it must be repeated here or it wins on specificity
+     and puts back a third column — an empty strip down the right of the phone. */
+  #table, #table.wide-seats {
+    grid-template-areas: "s1 s2" "center center" "me me"; grid-template-columns: 1fr 1fr;
+  }
+  /* Face-up hands are the tallest thing on the page, so on a phone the seat
+     panels drop what they do not need: the placeholder that reserves room for a
+     bid, and a shade off the cards. */
+  #table.wide-seats .seat.opp .tag.empty { display: none; }
+  :root { --card-open-w: 30px; }        /* the layout code reads this off :root */
+  /* A finished deal shows everything at once — three hands as dealt, the talon,
+     the discard, the last trick — so on a phone the cards step down a size and
+     the whole deal lands on one screen instead of trailing off the bottom. */
+  #table.reveal { --card-w: 46px; }
   .strip { max-width: 60vw; }
   #pulkadlg { width: auto; }
 }

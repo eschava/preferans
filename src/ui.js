@@ -69,9 +69,12 @@ function renderSeat(seat) {
   const bidding = view.phase === 'bidding';
   const showTricks = ['play', 'deal_end', 'game_over'].includes(view.phase);
   const bid = lastBidOf(seat);
+  // the blank tag reserves the line so the panel does not jump when a bid lands;
+  // it is marked so a narrow screen can drop it when every pixel counts
+  const role = roleTag(view, seat);
   const stake = bidding
-    ? (bid ? `<div class="bid">${bid}</div>` : '<div class="tag">&nbsp;</div>')
-    : `<div class="tag">${roleTag(view, seat) || '&nbsp;'}</div>`;
+    ? (bid ? `<div class="bid">${bid}</div>` : '<div class="tag empty">&nbsp;</div>')
+    : `<div class="tag${role ? '' : ' empty'}">${role || '&nbsp;'}</div>`;
 
   if (!mine) {
     el.innerHTML = `<div class="name">${playerName(view, seat)}</div>${stake}` +
@@ -391,6 +394,8 @@ function render(v) {
   if (v.phase !== 'talon') discardSel = [];
   $('status').textContent = t('app.status', { deal: v.deal, target: v.poolTarget });
   $('table').classList.toggle('wide-seats', [0, 1, 2].some((i) => i !== v.you && (v.dealt || v.hands[i])));
+  // a finished deal puts every hand on the table at once: a narrow screen sizes for it
+  $('table').classList.toggle('reveal', !!v.dealt);
   [0, 1, 2].forEach(renderSeat);
   renderCenter();
   renderLog();
