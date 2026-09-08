@@ -53,14 +53,14 @@ function records(x, y, values, color, fresh, { rot = 0, size = 15, len = 1e4, ro
   // colour says what the number is, weight says when: only what the deal just
   // played added is bold
   const items = list.map((v, i) => ({ s: v, bold: i === list.length - 1 && fresh }));
-  if (mark) items.push({ s: mark, bold: false });
+  if (mark) items.push({ s: mark, bold: false, nosep: true });   // ">>" hangs on the last number
 
   const wrap = (fs) => {
-    const cw = fs * 0.58, dw = fs * 0.3;          // digit and separator width
+    const cw = fs * 0.62, dw = fs * 0.32;         // measured: a digit is .59-.62em, a dot .28-.31em
     const rows = [[]];
     let used = 0, cap = len;
     for (const it of items) {
-      const need = (rows[rows.length - 1].length ? dw : 0) + it.s.length * cw;
+      const need = (rows[rows.length - 1].length && !it.nosep ? dw : 0) + it.s.length * cw;
       if (used && used + need > cap) { rows.push([it]); used = it.s.length * cw; cap -= shrink * fs * 1.26; }
       else { rows[rows.length - 1].push(it); used += need; }
     }
@@ -80,8 +80,8 @@ function records(x, y, values, color, fresh, { rot = 0, size = 15, len = 1e4, ro
   };
   return rows.map((row, i) => {
     const [rx, ry] = pos(i).map((n) => n.toFixed(1));
-    const body = row.map((it) => `<tspan${it.bold ? ' font-weight="700"' : ''}>${esc(it.s)}</tspan>`)
-      .join('<tspan opacity=".45">·</tspan>');
+    const body = row.map((it, k) => (k && !it.nosep ? '<tspan opacity=".45">·</tspan>' : '') +
+      `<tspan${it.bold ? ' font-weight="700"' : ''}>${esc(it.s)}</tspan>`).join('');
     return `<text x="${rx}" y="${ry}" font-size="${fs}" fill="${color}"${spin(rx, ry, rot)}>${body}</text>`;
   }).join('');
 }
@@ -99,10 +99,18 @@ export function scoresheetSVG(v) {
   const onto = (i) => (i === v.you ? t('sheet.you') : nm(i));
   const me = v.you, left = (v.you + 1) % 3, right = (v.you + 2) % 3;
 
+  // Every player's records start on one line, the way a hand starts every line
+  // of a page at the same margin. West's margin is the top edge, so his mountain,
+  // pool, whists and caption all begin at TOP. East reads from the other side and
+  // his margin is the slanting side of his sector, so his four begin on a line
+  // parallel to the ray.
+  const TOP = 12;
+  const eastLine = (x) => 196 + ((BY - BOXY1) / (XV4 - CX - BOXW)) * (x - (XV3 - 12));
+
   // in rotated cells the caption and the entries are two parallel lines
   // (different x); in the bottom ones the caption sits above (different y)
-  const whist = (capX, recX, y, from, to, rot, len) =>
-    label(capX, y, t('sheet.whistOn', { from: nm(from), to: onto(to) }), rot, { size: 9, weight: 400, color: MUTED }) +
+  const whist = (capX, recX, y, from, to, rot, len, capY = y) =>
+    label(capX, capY, t('sheet.whistOn', { from: nm(from), to: onto(to) }), rot, { size: 9, weight: 400, color: MUTED }) +
     records(recX, rot ? y : y + 20, whistRun(Hi, from, to), INK, wMoved(from, to), { rot, size: 13, len, room: 64 });
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
@@ -127,12 +135,12 @@ export function scoresheetSVG(v) {
     <text x="${CX}" y="${BOXY1 - 8}" text-anchor="middle" font-size="15" font-weight="700" fill="${INK}">${v.poolTarget}</text>
 
     <text x="${CX - 8}" y="14" text-anchor="end" font-size="12" font-weight="700" fill="${INK}">${nm(left)}</text>
-    ${records(XV2 + 8, 30, mountRun(Hi, left), MOUNTAIN, moved('mountain', left), { rot: 90, len: 180, shrink: 1.1, room: 66, up: true })}
-    ${records(XV1 + 5, 12, poolRun(Hi, left), INK, moved('pool', left), { rot: 90, mark: shut(left) })}
+    ${records(XV2 + 8, TOP, mountRun(Hi, left), MOUNTAIN, moved('mountain', left), { rot: 90, len: 195, shrink: 1.1, room: 66, up: true })}
+    ${records(XV1 + 5, TOP, poolRun(Hi, left), INK, moved('pool', left), { rot: 90, mark: shut(left) })}
 
     <text x="${CX + 8}" y="14" text-anchor="start" font-size="12" font-weight="700" fill="${INK}">${nm(right)}</text>
-    ${records(XV3 - 12, 196, mountRun(Hi, right), MOUNTAIN, moved('mountain', right), { rot: -90, len: 190, shrink: 1.1, slant: 1.1, room: 70, up: true })}
-    ${records(XV4 - 4, 226, poolRun(Hi, right), INK, moved('pool', right), { rot: -90, mark: shut(right) })}
+    ${records(XV3 - 12, eastLine(XV3 - 12), mountRun(Hi, right), MOUNTAIN, moved('mountain', right), { rot: -90, len: 190, shrink: 1.1, slant: 1.1, room: 70, up: true })}
+    ${records(XV4 - 4, eastLine(XV4 - 4), poolRun(Hi, right), INK, moved('pool', right), { rot: -90, mark: shut(right) })}
 
     <text x="${CX}" y="158" text-anchor="middle" font-size="12" font-weight="700" fill="${INK}">${nm(me)}</text>
     ${records(150, 228, mountRun(Hi, me), MOUNTAIN, moved('mountain', me), { len: 192, shrink: 2.2, slant: 1.1, room: 58, up: true })}
@@ -140,10 +148,10 @@ export function scoresheetSVG(v) {
       stroke="${LINE}" stroke-width="1.5"/>
     ${records(128, 252, poolRun(Hi, me), INK, moved('pool', me), { mark: shut(me) })}
 
-    ${whist(XV1 - 12, XV1 - 28, 20, left, right, 90, 105)}
-    ${whist(XV1 - 12, XV1 - 28, YH + 20, left, me, 90, 105)}
+    ${whist(XV1 - 12, XV1 - 28, TOP, left, right, 90, 112)}
+    ${whist(XV1 - 12, XV1 - 28, YH + TOP, left, me, 90, 112)}
     ${whist(W - XV1 + 12, W - XV1 + 30, YH - 4, right, left, -90, 120)}
-    ${whist(W - XV1 + 12, W - XV1 + 30, BY - 4, right, me, -90, 120)}
+    ${whist(W - XV1 + 12, W - XV1 + 30, eastLine(W - XV1 + 30), right, me, -90, 116, eastLine(W - XV1 + 12))}
     ${whist(96, 78, BY + 16, me, left, 0, 168)}
     ${whist(CX + 14, CX + 12, BY + 16, me, right, 0, 168)}
   </svg>`;
