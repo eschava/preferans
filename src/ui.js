@@ -505,6 +505,7 @@ const setup = {
   stalingrad: stored('pf.stalingrad', false),
   whistBlame: stored('pf.blame', 'both'),
 };
+let myName = stored('pf.name', '');   // what the others at a table will call you
 
 // The dialog does one of four things, and says which: play the bots here, open a
 // table for friends, walk into somebody's table with their code, or (from the
@@ -524,6 +525,19 @@ function drawSetup() {
   for (const [m, key] of [['local', 'mode.bots'], ['create', 'mode.create'], ['join', 'mode.join']])
     modes.append(btn(t(key), () => { setupMode = m; drawSetup(); }, setupMode === m ? 'primary' : ''));
   body.append(modes);
+
+  // online, the seat carries a name; against bots there is nobody to tell
+  if (setupMode === 'create' || setupMode === 'join') {
+    const row = document.createElement('div');
+    row.className = 'setrow';
+    row.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupName') }));
+    const name = document.createElement('input');
+    name.className = 'name'; name.maxLength = 16; name.value = myName;
+    name.placeholder = t('dlg.setupNameHint');
+    name.oninput = () => { myName = name.value; };
+    row.append(name);
+    body.append(row);
+  }
 
   if (setupMode === 'join') {
     // somebody else's table: the code is all you bring, the rules are theirs
@@ -620,7 +634,7 @@ function goRoom(code, token) {
 }
 
 function openOnline() {
-  createRoom({ poolTarget: setup.poolTarget, stalingrad: setup.stalingrad, whistBlame: setup.whistBlame })
+  createRoom({ ...setup, name: myName.trim() })
     .then(({ room, token, error }) => {
       if (error) throw new Error(error);
       keepToken({ room, token });
@@ -648,7 +662,7 @@ setupdlg.addEventListener('cancel', (e) => { if (!table) e.preventDefault(); });
 
 function startGame(token) {
   logLines = []; logSeen = -1; logDeal = 0; discardSel = []; pulkaShownFor = 0;
-  table = ROOM ? new RemoteTable({ room: ROOM, token: token ?? tokenOf(ROOM) })
+  table = ROOM ? new RemoteTable({ room: ROOM, token: token ?? tokenOf(ROOM), name: myName.trim() })
     : new LocalTable({ seat: 0, ...setup });
   if (table.onSeat) table.onSeat = keepToken;
   if (table.onError) table.onError = (code) => {

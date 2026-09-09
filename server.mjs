@@ -31,6 +31,10 @@ const newCode = () => {
   return code;
 };
 
+// A name other people will see, so it arrives as data and stays data: no markup
+// characters, one line, short enough to fit a seat label.
+const cleanName = (n) => String(n ?? '').replace(/[<>&"'\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16);
+
 // House rules, as the host set them — never trusted as they arrive.
 const rules = (o = {}) => ({
   poolTarget: [10, 20, 50].includes(o.poolTarget) ? o.poolTarget : 10,
@@ -50,6 +54,7 @@ function create(opts) {
   const code = newCode();
   rooms.set(code, {
     game: deal(opts), opts,
+    names: [null, null, null],      // what each seat calls itself; a bot seat has none
     started: false,                 // the host holds the table until they start it
     host: null,                     // the token that opened it
     human: [false, false, false],   // seats a person holds; the rest are bots
@@ -108,10 +113,16 @@ const readBody = (req) => new Promise((ok, err) => {
 
 // A seat is held by whoever knows its token — that is what a player's client
 // keeps, and the only thing that says which hand it may read.
+// Seat labels: a person's own name, or the default label a bot plays under.
+function label(r) {
+  r.names.forEach((n, i) => { r.game.players[i] = n || `player.p${i + 1}`; });
+}
+
 function take(r, seat) {
   const token = randomUUID();
   r.seats.set(token, seat);
   r.human[seat] = true;
+  label(r);
   clearTimeout(r.hold[seat]); r.hold[seat] = null;
   r.touched = Date.now();
   push(r);            // the others should see the seat fill at once
@@ -127,6 +138,7 @@ const server = http.createServer(async (req, res) => {
     const o = await readBody(req).catch(() => ({}));
     const code = create(rules(o));
     const r = rooms.get(code);
+    r.names[0] = cleanName(o.name) || null;
     const token = take(r, 0);
     r.host = token;                 // the table is theirs to start and to restart
     return json(res, 200, { room: code, seat: 0, token });
@@ -141,10 +153,13 @@ const server = http.createServer(async (req, res) => {
 
     if (m[2] === 'join') {
       // coming back with a token you already hold returns your own seat
-      const { token } = await readBody(req).catch(() => ({}));
+      const { token, name } = await readBody(req).catch(() => ({}));
+      const called = cleanName(name) || null;
       if (token && r.seats.has(token)) {
         const seat = r.seats.get(token);
         r.human[seat] = true;
+        if (called) r.names[seat] = called;
+        label(r);
         clearTimeout(r.hold[seat]); r.hold[seat] = null;
         push(r);
         runBots(r);
@@ -152,6 +167,7 @@ const server = http.createServer(async (req, res) => {
       }
       const seat = r.human.indexOf(false);
       if (seat < 0) return json(res, 409, { error: 'roomFull' });
+      r.names[seat] = called;
       return json(res, 200, { seat, token: take(r, seat) });
     }
 
@@ -168,7 +184,10 @@ const server = http.createServer(async (req, res) => {
         // let a bot play it so the others are not stuck waiting
         if (r.clients.some((c) => c.seat === seat)) return;
         clearTimeout(r.hold[seat]);
-        r.hold[seat] = setTimeout(() => { r.human[seat] = false; push(r); runBots(r); }, HOLD_MS);
+        r.hold[seat] = setTimeout(() => {
+          r.human[seat] = false; r.names[seat] = null; label(r);
+          push(r); runBots(r);
+        }, HOLD_MS);
       });
       return;
     }
@@ -184,7 +203,11 @@ const server = http.createServer(async (req, res) => {
     // deal — the engine knows nothing about either
     if (action?.type === 'start' || action?.type === 'newgame') {
       if (token !== r.host) return json(res, 403, { error: 'notHost' });
-      if (action.type === 'newgame') { r.opts = rules(action.opts ?? r.opts); r.game = deal(r.opts); }
+      if (action.type === 'newgame') {
+        r.opts = rules(action.opts ?? r.opts);
+        r.game = deal(r.opts);
+        label(r);                     // the same company, under the same names
+      }
       r.started = true;
       push(r);
       runBots(r);

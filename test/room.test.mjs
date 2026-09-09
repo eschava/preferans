@@ -31,7 +31,7 @@ for (let i = 0; i < 50; i++) {                       // wait for the port to ans
 }
 
 try {
-  const made = await post('/api/room', { poolTarget: 50, stalingrad: true, whistBlame: 'short' });
+  const made = await post('/api/room', { poolTarget: 50, stalingrad: true, whistBlame: 'short', name: 'Дід' });
   assert.match(made.room, /^[A-Z0-9]{5}$/, 'a code you can read out loud');
   assert.equal(made.seat, 0, 'whoever opens the table sits down first');
 
@@ -43,8 +43,8 @@ try {
   assert.equal(v0.you, 0);
   assert.equal(v0.hands.filter(Boolean).length, 1, 'a stream carries one hand: its own');
 
-  const p2 = await post(`/api/room/${made.room}/join`, {});
-  const p3 = await post(`/api/room/${made.room}/join`, {});
+  const p2 = await post(`/api/room/${made.room}/join`, { name: 'Оксана' });
+  const p3 = await post(`/api/room/${made.room}/join`, { name: '  <b>Rex</b>  ' });
   assert.deepEqual([p2.seat, p3.seat], [1, 2], 'the next people take the free seats');
   assert.equal((await post(`/api/room/${made.room}/join`, {})).error, 'roomFull');
   assert.equal((await post(`/api/room/${made.room}/join`, { token: made.token })).seat, 0,
@@ -52,6 +52,8 @@ try {
 
   const v2 = await first(`${B}/api/room/${made.room}/stream?token=${p2.token}`);
   assert.equal(v2.you, 1);
+  assert.deepEqual(v2.players, ['Дід', 'Оксана', 'bRex/b'],
+    'seats carry the names people gave, with markup characters dropped on the way in');
   assert.deepEqual(v2.humans, [true, true, true]);
   assert.equal(v2.hands[0], null, 'and neither player can read the other');
   assert.equal(v2.hands[2], null);
@@ -67,6 +69,11 @@ try {
   const running = await first(`${B}/api/room/${made.room}/stream?token=${made.token}`);
   assert.equal(running.started, true);
   assert.equal(running.deal, 1);
+
+  // a fresh deal keeps the company under the same names
+  await post(`/api/room/${made.room}/action`, { token: made.token, action: { type: 'newgame' } });
+  const again = await first(`${B}/api/room/${made.room}/stream?token=${p2.token}`);
+  assert.deepEqual(again.players, ['Дід', 'Оксана', 'bRex/b']);
 
   // the host can deal the table over; a guest cannot
   assert.equal((await post(`/api/room/${made.room}/action`, { token: p3.token, action: { type: 'newgame' } })).error, 'notHost');

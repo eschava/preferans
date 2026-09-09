@@ -49,14 +49,14 @@ export const createRoom = (opts, base = '') => post(`${base}/api/room`, opts);
 // token is the seat: it says which hand this client may read and act for, and
 // coming back with it returns the same seat after a reload.
 export class RemoteTable {
-  constructor({ room, token, base = '' }) {
+  constructor({ room, token, name, base = '' }) {
     this.base = `${base}/api/room/${encodeURIComponent(room)}`;
     this.listeners = [];
     this.seat = null;
     this.token = null;
     this.onError = () => {};
     this.onSeat = () => {};
-    this.ready = post(`${this.base}/join`, { token })
+    this.ready = post(`${this.base}/join`, { token, name })
       .then(({ seat, token: mine, error }) => {
         if (error) throw new Error(error);
         this.seat = seat;

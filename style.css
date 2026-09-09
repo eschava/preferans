@@ -60,6 +60,10 @@ header h1 { font-size: 20px; margin: 0; letter-spacing: .04em; }
   background: #ffffff14; color: var(--paper); cursor: pointer;
 }
 #roomcode:hover { background: #ffffff22; }
+.setrow input.name {
+  flex: 1; min-width: 0; padding: 7px 9px; border-radius: 8px; border: 1px solid #ffffff33;
+  background: #ffffff14; color: var(--paper); font: 15px/1.2 inherit;
+}
 .setrow input.code {
   width: 6.5em; padding: 6px 8px; border-radius: 8px; border: 1px solid #ffffff33;
   background: #ffffff14; color: var(--paper);

@@ -21,7 +21,10 @@ node server.mjs        # http://localhost:8080
 The dialog that opens a game asks one thing first: **against bots**, **create a
 table**, or **join** one with a code. The first two then show the house rules —
 pool target, who carries a whist shortfall, Stalingrad — and the third shows
-only the code field, because at somebody else's table the rules are theirs.
+only the code field, because at somebody else's table the rules are theirs. Both
+online modes take a name, which is what the rest of the table sees on your seat
+instead of "Player 2"; the browser remembers it. A seat handed back to a bot
+goes back to its plain label.
 
 Creating opens a game on the server with your rules and gives you a
 five-character code — the address bar
