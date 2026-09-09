@@ -463,12 +463,30 @@ function renderStatic() {
   $('menubtn').setAttribute('aria-label', t('app.menu'));
   $('showpulka').textContent = t('app.pool');
   $('newgame').textContent = t('app.newGame');
-  $('langs').innerHTML = LANGS.map((l) =>
-    `<button class="lang${l === getLang() ? ' on' : ''}" data-lang="${l}" title="${LANG_NAMES[l]}">` +
-    `${LANG_FLAGS[l]}</button>`).join('');
+  $('langs').innerHTML = langButtons();
   showCode();
   $('bidprev').setAttribute('aria-label', t('nav.prev'));
   $('bidnext').setAttribute('aria-label', t('nav.next'));
+}
+
+// The flags live in the menu and, because that dialog is modal and covers it,
+// in the new-game dialog as well.
+const langButtons = () => LANGS.map((l) =>
+  `<button class="lang${l === getLang() ? ' on' : ''}" data-lang="${l}" title="${LANG_NAMES[l]}">` +
+  `${LANG_FLAGS[l]}</button>`).join('');
+
+function pickLang(e) {
+  const l = e.target.closest('.lang')?.dataset.lang;
+  if (!l) return;
+  setLang(l);
+  try { localStorage.setItem('pf.lang', l); } catch { /* private mode */ }
+  closeMenu();
+  renderStatic();
+  // popups keep their markup between renders, so rebuild whatever is open
+  bidMode = null; bidDismissed = null; biddlg.close();
+  askMode = null; askdlg.close();
+  if (setupdlg.open) drawSetup();
+  if (view) render(view);
 }
 
 // One dropdown holds everything that is not part of the table itself.
@@ -483,19 +501,7 @@ document.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
 
 setLang(localStorage.getItem('pf.lang') || getLang());
-$('langs').onclick = (e) => {
-  const l = e.target.closest('.lang')?.dataset.lang;
-  if (!l) return;
-  setLang(l);
-  try { localStorage.setItem('pf.lang', l); } catch { /* private mode */ }
-  closeMenu();
-  renderStatic();
-  // popups keep their markup between renders, so rebuild whatever is open
-  bidMode = null; bidDismissed = null; biddlg.close();
-  askMode = null; askdlg.close();
-  if (setupdlg.open) drawSetup();
-  if (view) render(view);
-};
+$('langs').onclick = pickLang;
 
 let ROOM = new URLSearchParams(location.search).get('room');
 
@@ -589,6 +595,12 @@ function drawSetup() {
   if (table && view && view.phase !== 'game_over')
     body.append(Object.assign(document.createElement('div'),
       { className: 'setnote', textContent: t('dlg.newGameText') }));
+
+  const langs = document.createElement('div');
+  langs.className = 'setlangs';
+  langs.innerHTML = langButtons();
+  langs.onclick = pickLang;
+  body.append(langs);
 
   const acts = $('setupactions');
   acts.innerHTML = '';

@@ -143,9 +143,11 @@ the centre the talon and the declarer's discard.
 
 ## Languages
 
-The interface is available in Ukrainian and English. Everything that is not the
-table itself — score sheet, new game, the language flags — lives in a single
-dropdown menu in the header; the choice is remembered in `localStorage`.
+The interface is available in English and Ukrainian, English by default.
+Everything that is not the table itself — score sheet, new game, the language
+flags — lives in a single dropdown menu in the header, and the flags appear in
+the new-game dialog too, since that one is modal and covers the menu. The choice
+is remembered in `localStorage`.
 
 There is not one line of display text in the code: the engine writes `{k, p}`
 structures to the log and throws errors as codes, and `format.js` turns those

@@ -46,12 +46,13 @@ header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 #menu[hidden] { display: none; }
 #menu > button { width: 100%; text-align: left; }
 #langs { display: flex; gap: 6px; padding-top: 6px; border-top: 1px solid #ffffff1f; }
-#langs .lang {
+.setlangs { display: flex; gap: 6px; margin-top: 16px; max-width: 140px; }
+.lang {
   flex: 1; font-size: 20px; line-height: 1.1; padding: 4px 0;
   background: transparent; border-color: #ffffff26; color: inherit; filter: grayscale(1); opacity: .6;
 }
-#langs .lang.on, #langs .lang:hover { filter: none; opacity: 1; }
-#langs .lang.on { border-color: var(--accent); }
+.lang.on, .lang:hover { filter: none; opacity: 1; }
+.lang.on { border-color: var(--accent); }
 header h1 { font-size: 20px; margin: 0; letter-spacing: .04em; }
 #status { flex: 1; opacity: .85; }
 #roomcode {

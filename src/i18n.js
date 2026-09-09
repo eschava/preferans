@@ -345,11 +345,11 @@ export const LANGS = Object.keys(dicts);
 export const LANG_NAMES = { uk: 'Українська', en: 'English' };
 export const LANG_FLAGS = { uk: '🇺🇦', en: '🇬🇧' };
 
-let current = 'uk';
+let current = 'en';        // what a first-time visitor gets; the choice is remembered
 export const getLang = () => current;
 export const setLang = (l) => { if (dicts[l]) current = l; };
 
 export function t(key, params = {}) {
-  const s = dicts[current][key] ?? uk[key] ?? key;
+  const s = dicts[current][key] ?? en[key] ?? uk[key] ?? key;
   return s.replace(/\{(\w+)\}/g, (_, k) => (params[k] === undefined ? `{${k}}` : params[k]));
 }
