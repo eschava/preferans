@@ -126,11 +126,16 @@ export function chooseWhist(v) {
   const alone = partner !== null && v.whistDecl[partner] === false;
   // The duty is measured on what the DEFENCE takes, not on what the whister
   // takes alone: a partner who passed still plays, and on a half whist their
-  // hand goes face up for the whister to play. So their tricks count either
-  // way. Being alone does not remove them — it only doubles the share of a
-  // shortfall, which is worth a little caution, not two whole tricks.
+  // hand goes face up for the whister to play. So their tricks count either way.
+  //
+  // What being alone changes is the bill, not the tricks — and the bill is
+  // lopsided: a shortfall goes into the mountain, worth ten a point in the
+  // settlement, while the tricks you do take are whists, worth one. So whisting
+  // alone has to clear the duty by a margin, not merely reach it. Measured over
+  // three seeds of 150 deals, whisting on the flat bar cost the defence 60-250
+  // points a seed against this; whisting on everything cost far more.
   const pair = est + 2.0;                        // the partner takes two on average
-  return { type: 'whist', whist: pair >= duty - (alone ? 0 : 0.3) };
+  return { type: 'whist', whist: pair >= duty + (alone ? 1.7 : -0.3) };
 }
 
 const defenderPartner = (v) => {
