@@ -223,9 +223,11 @@ export const setPlayBudget = (ms) => { budgetMs = ms; };
 
 // Depth or breadth. On the opening tricks one exact solve of a whole deal costs
 // the better part of a second, so a bot affords a single guess at the unseen
-// hands — and plays that one guess perfectly. Measured head to head, that trade
-// is the right one in a suit contract: solving to the end beat solving five
-// tricks deep by ~150 points over 90 seat-deals.
+// hands — and plays that one guess perfectly. Which trade is better in a suit
+// contract is not settled: head to head over 30 deals x 3 seats, depth won by
+// 146 points on one seed and lost by 268 on the next, so the harness cannot see
+// a difference of that size at that length. Suit play is therefore left exactly
+// as it was.
 //
 // Defending a misère it is the wrong one, because there the hidden hand IS the
 // game: the defenders see each other, and all that is left to work out is where
