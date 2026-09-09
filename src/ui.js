@@ -1,7 +1,7 @@
 import { suitOf, contractRank, allContracts, trumpOf, mustWhist, WHIST_DUTY } from './engine.js';
 import { contractName, playerName, suitSym, entryText } from './format.js';
 import { t, setLang, getLang, LANGS, LANG_NAMES, LANG_FLAGS } from './i18n.js';
-import { LocalTable, RemoteTable } from './transport.js';
+import { LocalTable, RemoteTable, createRoom } from './transport.js';
 import { cardSVG, backSVG } from './cards.js';
 import { scoresheetSVG, pointsHTML, historyHTML } from './scoresheet.js';
 
@@ -76,8 +76,9 @@ function renderSeat(seat) {
     ? (bid ? `<div class="bid">${bid}</div>` : '<div class="tag empty">&nbsp;</div>')
     : `<div class="tag${role ? '' : ' empty'}">${role || '&nbsp;'}</div>`;
 
+  const bot = view.humans && !view.humans[seat] ? ` <small class="bot">${t('seat.bot')}</small>` : '';
   if (!mine) {
-    el.innerHTML = `<div class="name">${playerName(view, seat)}</div>${stake}` +
+    el.innerHTML = `<div class="name">${playerName(view, seat)}${bot}</div>${stake}` +
       (showTricks ? `<div class="tag">${t('seat.tricks', { n: view.tricks[seat] })}</div>` : '');
     const shown = view.dealt ? view.dealt[seat] : view.hands[seat];
     if (shown) {                                   // cards face up on the table
@@ -425,6 +426,22 @@ function render(v) {
 }
 
 // Static chrome is filled from the dictionary so the switcher can redraw it.
+// Online only: the code people join by. Clicking copies the link to this table.
+function showCode() {
+  const el = $('roomcode');
+  el.hidden = !ROOM;
+  $('newgame').disabled = !!ROOM;            // online: the room owns the game
+  if (!ROOM) return;
+  const label = () => { el.textContent = `${t('app.code')}: ${ROOM}`; };
+  label();
+  el.title = t('app.codeHint');
+  el.onclick = () => {
+    navigator.clipboard?.writeText(`${location.origin}${location.pathname}?room=${ROOM}`)
+      .then(() => { el.textContent = t('app.copied'); setTimeout(label, 1500); })
+      .catch(() => { /* no clipboard: the code itself is on screen anyway */ });
+  };
+}
+
 function renderStatic() {
   document.documentElement.lang = getLang();
   document.title = t('app.title');
@@ -435,6 +452,7 @@ function renderStatic() {
   $('langs').innerHTML = LANGS.map((l) =>
     `<button class="lang${l === getLang() ? ' on' : ''}" data-lang="${l}" title="${LANG_NAMES[l]}">` +
     `${LANG_FLAGS[l]}</button>`).join('');
+  showCode();
   $('bidprev').setAttribute('aria-label', t('nav.prev'));
   $('bidnext').setAttribute('aria-label', t('nav.next'));
 }
@@ -465,7 +483,7 @@ $('langs').onclick = (e) => {
   if (view) render(view);
 };
 
-const ROOM = new URLSearchParams(location.search).get('room');
+let ROOM = new URLSearchParams(location.search).get('room');
 
 // Settings for the next game. Remembered, so the dialog opens on what was last
 // played rather than on the defaults.
@@ -508,17 +526,63 @@ function drawSetup(onStart) {
     Object.assign(document.createElement('small'), { textContent: t('dlg.setupStalingradHint') }));
   body.append(line);
 
+  // joining somebody else's table: the code is all you need, and the settings
+  // above are theirs, not yours
+  const join = document.createElement('div');
+  join.className = 'setrow';
+  join.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupJoin') }));
+  const code = document.createElement('input');
+  code.className = 'code'; code.maxLength = 5; code.placeholder = '—————';
+  code.oninput = () => { code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); };
+  code.onkeydown = (e) => { if (e.key === 'Enter' && code.value.length === 5) joinRoom(code.value); };
+  join.append(code, btn(t('btn.join'), () => code.value.length === 5 && joinRoom(code.value)));
+  body.append(join);
+
   const acts = $('setupactions');
   acts.innerHTML = '';
-  acts.append(btn(t('btn.start'), () => {
-    try {
-      localStorage.setItem('pf.pool', String(setup.poolTarget));
-      localStorage.setItem('pf.stalingrad', String(setup.stalingrad));
-      localStorage.setItem('pf.blame', JSON.stringify(setup.whistBlame));
-    } catch { /* private mode */ }
-    setupdlg.close();
-    onStart();
-  }, 'primary'));
+  acts.append(btn(t('btn.createOnline'), () => { remember(); openOnline(); }));
+  acts.append(btn(t('btn.start'), () => { remember(); setupdlg.close(); onStart(); }, 'primary'));
+}
+
+const remember = () => {
+  try {
+    localStorage.setItem('pf.pool', String(setup.poolTarget));
+    localStorage.setItem('pf.stalingrad', String(setup.stalingrad));
+    localStorage.setItem('pf.blame', JSON.stringify(setup.whistBlame));
+  } catch { /* private mode */ }
+};
+
+// The token is what holds a seat, so it is kept per room: a reload rejoins the
+// same hand instead of taking a new seat.
+const tokenOf = (code) => { try { return localStorage.getItem('pf.seat.' + code); } catch { return null; } };
+const keepToken = ({ room, token }) => {
+  try { localStorage.setItem('pf.seat.' + room, token); } catch { /* private mode */ }
+};
+
+function goRoom(code, token) {
+  ROOM = code;
+  history.replaceState(null, '', `?room=${code}`);
+  setupdlg.close();
+  startGame(token);
+}
+
+function openOnline() {
+  createRoom({ poolTarget: setup.poolTarget, stalingrad: setup.stalingrad, whistBlame: setup.whistBlame })
+    .then(({ room, token, error }) => {
+      if (error) throw new Error(error);
+      keepToken({ room, token });
+      goRoom(room, token);
+    })
+    .catch((e) => setupError(e.message || String(e)));
+}
+
+const joinRoom = (code) => goRoom(code, tokenOf(code));
+
+function setupError(code) {
+  const msg = t('err.joinFailed', { msg: t('err.' + code) });
+  const box = $('setupbody');
+  box.querySelector('.warn')?.remove();
+  box.insertAdjacentHTML('beforeend', `<div class="warn">${msg}</div>`);
 }
 
 function openSetup(onStart) {
@@ -528,17 +592,20 @@ function openSetup(onStart) {
 // with no game behind it there is nothing to go back to, so Esc does not close it
 setupdlg.addEventListener('cancel', (e) => { if (!table) e.preventDefault(); });
 
-function startGame() {
+function startGame(token) {
   logLines = []; logSeen = -1; logDeal = 0; discardSel = []; pulkaShownFor = 0;
-  table = ROOM ? new RemoteTable({ room: ROOM })
+  table = ROOM ? new RemoteTable({ room: ROOM, token: token ?? tokenOf(ROOM) })
     : new LocalTable({ seat: 0, ...setup });
+  if (table.onSeat) table.onSeat = keepToken;
   if (table.onError) table.onError = (code) => {
+    if (setupdlg.open) return setupError(code);
     const text = t('err.joinFailed', { msg: t('err.' + code) });
     $('status').textContent = text;
     $('actions').innerHTML = `<div class="hint">${text}</div>`;
   };
   table.onState(render);
   table.run();
+  showCode();
 }
 
 // online: the room owns the settings, so there is nothing to ask
@@ -551,5 +618,4 @@ $('newgame').onclick = () => {
   confirmAsk(t('dlg.newGameAsk'), t('dlg.newGameText'), newGame, t('app.newGame'));
 };
 $('showpulka').onclick = () => { closeMenu(); openPulka(); };
-$('newgame').disabled = !!ROOM;                 // online: the room owns the game
 newGame();

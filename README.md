@@ -16,8 +16,22 @@ and takes a few seconds.
 node server.mjs        # http://localhost:8080
 ```
 
-Online table: `http://localhost:8080/?room=any-name` — open the link on several
-devices; whoever joins takes a seat.
+## Playing with people
+
+The settings dialog has a **Create a table** button. It opens a game on the
+server with your settings and gives you a five-character code — the address bar
+becomes `?room=CODE`, and the header carries a chip that copies the link when
+clicked. Anyone with the code joins from their own dialog, or just by opening
+the link.
+
+Until people take them, the free seats are played by the same bots, and every
+seat says whether a person or a bot holds it. A seat is yours for as long as you
+hold its token: your browser keeps it, so a reload drops you back into the same
+hand. Lose the connection and the seat waits a minute for you before a bot takes
+over — come back later and you get it back if nobody else has sat down.
+
+The token is also the only thing that opens a seat's stream, so knowing the room
+code lets you join the table, never read somebody else's cards.
 
 ### Hosting
 
@@ -37,8 +51,7 @@ and is unaffected.
 Checking the rules and the bots:
 
 ```bash
-node test/engine.test.mjs
-node test/solver.test.mjs
+npm test        # rules, bots, and the online table
 ```
 
 ## Structure

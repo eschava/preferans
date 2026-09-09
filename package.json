@@ -5,9 +5,11 @@
   "type": "module",
   "private": true,
   "license": "MIT",
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node test/engine.test.mjs && node test/solver.test.mjs"
+    "test": "node test/engine.test.mjs && node test/solver.test.mjs && node test/room.test.mjs"
   }
 }

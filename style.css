@@ -54,6 +54,18 @@ header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 #langs .lang.on { border-color: var(--accent); }
 header h1 { font-size: 20px; margin: 0; letter-spacing: .04em; }
 #status { flex: 1; opacity: .85; }
+#roomcode {
+  font: 600 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em;
+  padding: 7px 10px; border-radius: 8px; border: 1px solid #ffffff33;
+  background: #ffffff14; color: var(--paper); cursor: pointer;
+}
+#roomcode:hover { background: #ffffff22; }
+.setrow input.code {
+  width: 6.5em; padding: 6px 8px; border-radius: 8px; border: 1px solid #ffffff33;
+  background: #ffffff14; color: var(--paper);
+  font: 600 15px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .18em; text-align: center;
+}
+.seat .bot { font-weight: 400; opacity: .6; }
 button {
   font: inherit; padding: 6px 12px; border-radius: 6px; cursor: pointer;
   border: 1px solid var(--line); background: var(--paper); color: var(--ink);

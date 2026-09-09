@@ -1,14 +1,17 @@
 // Fits estimateTricks() against tricks actually won in bot-vs-bot playouts.
-// Run from the repo root: node scripts/calibrate.mjs, then update expectedTricks() in src/bots.js.
+// Run from the repo root: node scripts/calibrate.mjs [deals] [seed] [budgetMs],
+// then update expectedTricks() in src/bots.js. The fit goes stale whenever the
+// card play changes — stronger play takes more tricks off the same estimate.
 import { setRandom, newGame, applyAction, viewFor, makeDeck, sortHand, controllerOf } from '../src/engine.js';
 import { setPlayBudget } from '../src/solver.js';
 import { botAction, estimateTricks } from '../src/bots.js';
 import { SUITS } from '../src/engine.js';
 const seeded=(s)=>()=>{s|=0;s=(s+0x6D2B79F5)|0;let t=Math.imul(s^(s>>>15),1|s);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};
-setPlayBudget(12);   // calibration runs thousands of decisions
-setRandom(seeded(99));
+const DEALS = Number(process.argv[2] || 200), SEED = Number(process.argv[3] || 99);
+setPlayBudget(Number(process.argv[4] || 12));   // calibration runs thousands of decisions
+setRandom(seeded(SEED));
 const pts=[];
-for(let n=0;n<200;n++){
+for(let n=0;n<DEALS;n++){
   const g=newGame();
   // force seat 0 declarer with its best trump, take talon, discard, both whist
   const d=0;

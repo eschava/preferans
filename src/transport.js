@@ -37,19 +37,32 @@ export class LocalTable {
   }
 }
 
-// Online drop-in: same interface, state comes from the server over SSE.
+const post = (path, body) => fetch(path, {
+  method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body || {}),
+}).then((r) => r.json());
+
+// Open a table on the server with these settings; the answer is the code to
+// share and the token for the host's own seat.
+export const createRoom = (opts, base = '') => post(`${base}/api/room`, opts);
+
+// Online drop-in: same interface, state comes from the server over SSE. The
+// token is the seat: it says which hand this client may read and act for, and
+// coming back with it returns the same seat after a reload.
 export class RemoteTable {
-  constructor({ room, base = '' }) {
+  constructor({ room, token, base = '' }) {
     this.base = `${base}/api/room/${encodeURIComponent(room)}`;
     this.listeners = [];
     this.seat = null;
+    this.token = null;
     this.onError = () => {};
-    this.ready = fetch(`${this.base}/join`, { method: 'POST' })
-      .then((r) => r.json())
-      .then(({ seat, error }) => {
+    this.onSeat = () => {};
+    this.ready = post(`${this.base}/join`, { token })
+      .then(({ seat, token: mine, error }) => {
         if (error) throw new Error(error);
         this.seat = seat;
-        this.es = new EventSource(`${this.base}/stream?seat=${seat}`);
+        this.token = mine;
+        this.onSeat({ room, seat, token: mine });
+        this.es = new EventSource(`${this.base}/stream?token=${encodeURIComponent(mine)}`);
         this.es.onmessage = (e) => this.listeners.forEach((f) => f(JSON.parse(e.data)));
       })
       .catch((e) => this.onError(e.message || String(e)));   // otherwise the page just stays blank
@@ -60,7 +73,7 @@ export class RemoteTable {
     return fetch(`${this.base}/action`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ seat: this.seat, action }),
-    }).then((r) => r.ok || r.text().then((t) => { throw new Error(t); }));
+      body: JSON.stringify({ token: this.token, action }),
+    }).then((r) => r.ok || r.json().then((b) => { throw new Error(b.error || 'unknownAction'); }));
   }
 }
