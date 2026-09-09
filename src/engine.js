@@ -334,12 +334,13 @@ function doPlay(g, seat, card) {
   if (g.trick.length < 3) { g.turn = (seat + 1) % 3; return g; }
 
   const forced = forcedSuit(g);
+  const shown = forced ? g.talon[g.trickNo] : null;    // the talon card this trick was led to
   const w = trickWinner(g.trick, trumpOf(g.contract), forced);
   g.tricks[w]++;
   g.trickNo++;
   g.lastTrick = { cards: g.trick, winner: w };
   g.log.push({ k: forced ? 'log.trickForced' : 'log.trick',
-    p: { n: g.trickNo, suit: forced, cards: g.trick.map((x) => x.card), player: w } });
+    p: { n: g.trickNo, card: shown, cards: g.trick.map((x) => x.card), player: w } });
   g.trick = [];
   // In an all-pass deal the first three tricks are all led by the hand left of
   // the dealer, whoever took them; only from the fourth does the taker lead.

@@ -28,6 +28,7 @@ export function entryText(view, e) {
   if (p.to !== undefined) p.to = playerName(view, p.to);
   if (p.contract !== undefined) p.contract = contractName(p.contract);
   if (p.cards !== undefined) p.cards = p.cards.map(cardLabel).join(' ');
+  if (p.card) p.card = cardLabel(p.card);          // only a forced trick carries one
   if (p.suit !== undefined) p.suit = suitSym(p.suit);
   return t(e.k, p);
 }

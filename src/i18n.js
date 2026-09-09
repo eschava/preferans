@@ -128,7 +128,7 @@ const uk = {
   'log.whistPass': '{player}: пас',
   'log.bothPassed': 'Обидва пас — гра записана без розіграшу',
   'log.trick': '{n}. {cards} → {player}',
-  'log.trickForced': '{n}. (прикуп {suit}) {cards} → {player}',
+  'log.trickForced': '{n}. (прикуп {card}) {cards} → {player}',
 
   'score.made': '{player}: гра зіграна ({tricks})',
   'score.toPool': '{player}: +{n} у пулю',
@@ -299,7 +299,7 @@ const en = {
   'log.whistPass': '{player}: pass',
   'log.bothPassed': 'Both passed — the contract is scored unplayed',
   'log.trick': '{n}. {cards} → {player}',
-  'log.trickForced': '{n}. (talon {suit}) {cards} → {player}',
+  'log.trickForced': '{n}. (talon {card}) {cards} → {player}',
 
   'score.made': '{player}: contract made ({tricks})',
   'score.toPool': '{player}: +{n} to the pool',

@@ -207,7 +207,8 @@ function cardsIn(x, out = new Set()) {
   applyAction(g, 2, { type: 'play', card: 'd8' });
   assert.equal(g.tricks[2], 1, 'the highest card of the talon suit takes the trick');
   assert.equal(forcedSuit(g), 's');                             // second trick follows the second talon card
-  assert.ok(g.log.some((l) => l.k === 'log.trickForced'));
+  const forcedLine = g.log.find((l) => l.k === 'log.trickForced');
+  assert.equal(forcedLine.p.card, g.talon[0], 'the log names the talon card that was turned, not just its suit');
 }
 
 // a closed pool spills over: first as help to the others, then onto the own mountain
