@@ -76,6 +76,7 @@ npm test        # rules, bots, and the online table
 | `src/bots.js` | bot decisions: bidding, discard, whist. They only ever see `viewFor(seat)` |
 | `src/solver.js` | card play: exact double-dummy search + Monte Carlo over the unseen cards |
 | `src/transport.js` | the seam between UI and rules: `LocalTable` (in-browser) and `RemoteTable` (SSE to the server) |
+| `src/worker.js` | the bots' search, off the page's thread, so a long think does not freeze the table |
 | `src/ui.js` | rendering. Knows only `send(action)` and `onState(view)` |
 | `src/i18n.js` | every piece of text, in both languages |
 | `src/format.js` | turns engine data into text for the current language: contracts, cards, log lines |
@@ -233,9 +234,17 @@ declarer maximises their own tricks, the defence its own, on misère the defence
 maximises the declarer's tricks, and in an all-pass deal each player minimises
 their own against the other two.
 
-The number of samples tunes itself to a time budget: one sample costs about
-150 ms on the first trick and about 2 ms on the fourth, so by the end of a deal
-the bot fits in 20+ samples and plays essentially perfectly.
+Only deals that could have happened are sampled: a seat that failed to follow a
+suit is never dealt that suit back, and if it did not trump either, the trump
+goes too. Reading a table it cannot see is all a bot has, and guessing at deals
+the play has already ruled out is worse than not guessing — it is what let a
+defence lead a suit the declarer had shown void in, handing over a free discard.
+
+The number of samples tunes itself to a time budget: one sample costs the better
+part of a second on the first trick and about 2 ms on the fourth, so by the end
+of a deal the bot fits in 20+ samples and plays essentially perfectly. In the
+local game that search runs in a Web Worker, so the first trick no longer freezes
+the page while it thinks; online the server does the thinking anyway.
 
 The search is cross-checked against an independent brute-force minimax
 (`test/solver.test.mjs`): 240 positions agree on the value and 54 on the card
