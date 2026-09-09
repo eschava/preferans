@@ -153,6 +153,10 @@ dialog {
 #asktext { opacity: .85; font-size: 14px; }
 dialog h2 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
 dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+.setrow { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+.setrow small { opacity: .7; }
+.setrow input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+.warn { margin-top: 8px; color: var(--accent); }
 
 .scroller { display: flex; align-items: center; gap: 6px; }
 .scroller .nav { padding: 0 10px; font-size: 22px; line-height: 34px; }

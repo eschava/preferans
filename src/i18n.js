@@ -78,6 +78,12 @@ const uk = {
   'dlg.whistText': 'Вістуючі зобовʼязані взяти <b>{duty}</b> взяток на двох — ' +
     'недобір пишеться їм у гору. Якщо партнер спасує, тягнути доведеться самому.',
   'dlg.whistYes': 'Віст',
+  'dlg.whistForced': '<b>Сталінград</b>: на 6 ♠ пас неможливий — вістують обидва.',
+  'dlg.setupTitle': 'Налаштування партії',
+  'dlg.setupPool': 'Пуля до',
+  'dlg.setupStalingrad': 'Сталінград',
+  'dlg.setupStalingradHint': 'на 6 ♠ вістувати обовʼязково',
+  'btn.start': 'Почати',
   'dlg.newGameAsk': 'Почати нову гру?',
   'dlg.newGameText': 'Поточна гра і всі записи в пульці зникнуть.',
 
@@ -127,6 +133,7 @@ const uk = {
   'err.misereMandatory': 'Від розіграшу мізеру відмовитись не можна',
   'err.contractBelowBid': 'Гра нижча за заявку',
   'err.notWhist': 'Не етап вісту',
+  'err.whistMandatory': 'Сталінград: на 6 ♠ пасувати не можна',
   'err.notPlay': 'Не етап розіграшу',
   'err.illegalCard': 'Хід не за правилами',
   'err.dealInProgress': 'Роздача ще триває',
@@ -215,6 +222,12 @@ const en = {
   'dlg.whistText': 'The whisters owe <b>{duty}</b> tricks between them — ' +
     'a shortfall goes into their mountain. If your partner passes, you carry it alone.',
   'dlg.whistYes': 'Whist',
+  'dlg.whistForced': '<b>Stalingrad</b>: no pass on 6 ♠ — both defenders whist.',
+  'dlg.setupTitle': 'Game settings',
+  'dlg.setupPool': 'Pool to',
+  'dlg.setupStalingrad': 'Stalingrad',
+  'dlg.setupStalingradHint': 'whisting a six of spades is compulsory',
+  'btn.start': 'Start',
   'dlg.newGameAsk': 'Start a new game?',
   'dlg.newGameText': 'The current game and everything on the sheet will be lost.',
 
@@ -265,6 +278,7 @@ const en = {
   'err.misereMandatory': 'Misère cannot be abandoned',
   'err.contractBelowBid': 'Contract is lower than the winning bid',
   'err.notWhist': 'Not the whist phase',
+  'err.whistMandatory': 'Stalingrad: no passing on a six of spades',
   'err.notPlay': 'Not the play phase',
   'err.illegalCard': 'Illegal card',
   'err.dealInProgress': 'The deal is still running',

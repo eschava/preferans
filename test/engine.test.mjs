@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {
   makeDeck, setRandom, newGame, applyAction, viewFor, legalCards, trickWinner,
-  contractRank, contractValue, finalScores, canRepeat, sortHand, controllerOf,
+  contractRank, contractValue, finalScores, canRepeat, sortHand, controllerOf, legalActions,
   forcedSuit, suitOf, RASPAS_TRICK,
 } from '../src/engine.js';
 import { botAction } from '../src/bots.js';
@@ -318,6 +318,30 @@ function cardsIn(x, out = new Set()) {
   assert.equal(g.score.mountain[0], 12);             // 3 short x value 4
   assert.equal(g.score.whists[1][0], 12);            // whister: 3 tricks x 4
   assert.equal(g.score.whists[2][0], 0);             // passer records nothing
+}
+
+// "Stalingrad": on a six of spades the defence may not wave the deal through.
+{
+  setRandom(seeded(88));
+  const g = newGame({ poolTarget: 20, stalingrad: true });
+  assert.equal(g.poolTarget, 20, 'the pool target is settable');
+  g.declarer = 0; g.contract = { level: 6, suit: 's' }; g.whistDecl = [null, null, null];
+  g.phase = 'whist'; g.turn = 1;
+
+  assert.deepEqual(legalActions(g, 1), [{ type: 'whist', whist: true }], 'pass is not on offer');
+  assert.throws(() => applyAction(g, 1, { type: 'whist', whist: false }), /whistMandatory/);
+  assert.ok(viewFor(g, 1).stalingrad, 'the seat view carries the rule, so the UI can say why');
+  assert.deepEqual(botAction(viewFor(g, 1)), { type: 'whist', whist: true }, 'a bot has no choice either');
+  applyAction(g, 1, { type: 'whist', whist: true });
+
+  // any other contract is a free choice, and so is a six of spades without the rule
+  g.contract = { level: 6, suit: 'c' }; g.whistDecl = [null, null, null]; g.phase = 'whist'; g.turn = 1;
+  assert.equal(legalActions(g, 1).length, 2);
+  const off = newGame();
+  assert.equal(off.stalingrad, false, 'off unless asked for');
+  off.declarer = 0; off.contract = { level: 6, suit: 's' }; off.whistDecl = [null, null, null];
+  off.phase = 'whist'; off.turn = 1;
+  assert.equal(legalActions(off, 1).length, 2);
 }
 
 // All-pass: the hand left of the dealer leads the first three tricks, whoever

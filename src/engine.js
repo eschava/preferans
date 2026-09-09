@@ -70,6 +70,7 @@ export function newGame(opts = {}) {
     players: opts.players || ['player.you', 'player.west', 'player.east'],
     poolTarget: opts.poolTarget ?? 10,
     openOnHalfWhist: opts.openOnHalfWhist ?? true,
+    stalingrad: opts.stalingrad ?? false,   // whisting a six of spades is compulsory
     deal: 0,
     dealer: 2,
     score: { pool: [0, 0, 0], mountain: [0, 0, 0], whists: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] },
@@ -188,6 +189,12 @@ export function legalCards(g, seat) {
 // {type:'bid', contract|null} | {type:'declare', discard, contract}
 // {type:'whist', whist:bool} | {type:'play', card} | {type:'next'}
 
+// "Stalingrad": on a six of spades — the cheapest game there is — the defence
+// may not wave the deal through; both must whist.
+export const mustWhist = (g) =>
+  !!g.stalingrad && !!g.contract && !g.contract.misere && !g.contract.raspas &&
+  g.contract.level === 6 && g.contract.suit === 's';
+
 export function legalActions(g, seat) {
   if (g.turn !== seat) return [];
   switch (g.phase) {
@@ -198,7 +205,9 @@ export function legalActions(g, seat) {
       return [{ type: 'bid', contract: null }, ...up.map((c) => ({ type: 'bid', contract: c }))];
     }
     case 'talon': return [{ type: 'declare' }];
-    case 'whist': return [{ type: 'whist', whist: true }, { type: 'whist', whist: false }];
+    case 'whist': return mustWhist(g)
+      ? [{ type: 'whist', whist: true }]
+      : [{ type: 'whist', whist: true }, { type: 'whist', whist: false }];
     case 'play': return legalCards(g, seat).map((card) => ({ type: 'play', card }));   // see controllerOf
     case 'deal_end': return [{ type: 'next' }];
     default: return [];
@@ -285,6 +294,7 @@ function doDeclare(g, seat, discard, contract) {
 
 function doWhist(g, seat, whist) {
   if (g.phase !== 'whist') throw new Error('notWhist');
+  if (!whist && mustWhist(g)) throw new Error('whistMandatory');
   g.whistDecl[seat] = whist;
   g.log.push({ k: whist ? 'log.whist' : 'log.whistPass', p: { player: seat } });
   const [d1, d2] = defendersOf(g);

@@ -1,4 +1,4 @@
-import { suitOf, contractRank, allContracts, trumpOf, WHIST_DUTY } from './engine.js';
+import { suitOf, contractRank, allContracts, trumpOf, mustWhist, WHIST_DUTY } from './engine.js';
 import { contractName, playerName, suitSym, entryText } from './format.js';
 import { t, setLang, getLang, LANGS, LANG_NAMES, LANG_FLAGS } from './i18n.js';
 import { LocalTable, RemoteTable } from './transport.js';
@@ -6,7 +6,7 @@ import { cardSVG, backSVG } from './cards.js';
 import { scoresheetSVG, pointsHTML, historyHTML } from './scoresheet.js';
 
 const $ = (id) => document.getElementById(id);
-const biddlg = $('biddlg'), pulkadlg = $('pulkadlg'), askdlg = $('askdlg');
+const biddlg = $('biddlg'), pulkadlg = $('pulkadlg'), askdlg = $('askdlg'), setupdlg = $('setupdlg');
 
 let table, view, discardSel = [], logLines = [], logSeen = -1, logDeal = 0;
 let bidMode = null;          // 'bid' | 'declare' — what the bid popup is currently asking for
@@ -278,15 +278,17 @@ biddlg.addEventListener('cancel', () => { bidDismissed = bidKey(); });
 biddlg.addEventListener('close', () => { bidMode = null; render(view); });
 
 function openWhist() {
+  const forced = mustWhist(view);
   ask({
     mode: 'whist',
     title: t('dlg.whistTitle', {
       player: playerName(view, view.declarer), contract: contractName(view.contract),
     }),
-    text: t('dlg.whistText', { duty: WHIST_DUTY[view.contract.level] }),
+    text: t('dlg.whistText', { duty: WHIST_DUTY[view.contract.level] }) +
+      (forced ? `<div class="warn">${t('dlg.whistForced')}</div>` : ''),
     buttons: [
       { label: t('dlg.whistYes'), cls: 'primary', fn: () => table.send({ type: 'whist', whist: true }) },
-      { label: t('btn.pass'), fn: () => table.send({ type: 'whist', whist: false }) },
+      ...(forced ? [] : [{ label: t('btn.pass'), fn: () => table.send({ type: 'whist', whist: false }) }]),
     ],
   });
 }
@@ -459,14 +461,64 @@ $('langs').onclick = (e) => {
   // popups keep their markup between renders, so rebuild whatever is open
   bidMode = null; bidDismissed = null; biddlg.close();
   askMode = null; askdlg.close();
+  if (setupdlg.open) drawSetup(startGame);
   if (view) render(view);
 };
 
 const ROOM = new URLSearchParams(location.search).get('room');
 
-function newGame() {
+// Settings for the next game. Remembered, so the dialog opens on what was last
+// played rather than on the defaults.
+const stored = (k, dflt) => {
+  try { const v = localStorage.getItem(k); return v === null ? dflt : JSON.parse(v); } catch { return dflt; }
+};
+const setup = { poolTarget: stored('pf.pool', 10), stalingrad: stored('pf.stalingrad', false) };
+
+function drawSetup(onStart) {
+  $('setuptitle').textContent = t('dlg.setupTitle');
+  const body = $('setupbody');
+  body.innerHTML = '';
+
+  const pool = document.createElement('div');
+  pool.className = 'setrow';
+  pool.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupPool') }));
+  for (const n of [10, 20, 50])
+    pool.append(btn(String(n), () => { setup.poolTarget = n; drawSetup(onStart); },
+      setup.poolTarget === n ? 'primary' : ''));
+  body.append(pool);
+
+  const box = document.createElement('input');
+  box.type = 'checkbox'; box.checked = setup.stalingrad;
+  box.onchange = () => { setup.stalingrad = box.checked; };
+  const line = document.createElement('label');
+  line.className = 'setrow';
+  line.append(box, Object.assign(document.createElement('span'), { textContent: t('dlg.setupStalingrad') }),
+    Object.assign(document.createElement('small'), { textContent: t('dlg.setupStalingradHint') }));
+  body.append(line);
+
+  const acts = $('setupactions');
+  acts.innerHTML = '';
+  acts.append(btn(t('btn.start'), () => {
+    try {
+      localStorage.setItem('pf.pool', String(setup.poolTarget));
+      localStorage.setItem('pf.stalingrad', String(setup.stalingrad));
+    } catch { /* private mode */ }
+    setupdlg.close();
+    onStart();
+  }, 'primary'));
+}
+
+function openSetup(onStart) {
+  drawSetup(onStart);
+  if (!setupdlg.open) setupdlg.showModal();
+}
+// with no game behind it there is nothing to go back to, so Esc does not close it
+setupdlg.addEventListener('cancel', (e) => { if (!table) e.preventDefault(); });
+
+function startGame() {
   logLines = []; logSeen = -1; logDeal = 0; discardSel = []; pulkaShownFor = 0;
-  table = ROOM ? new RemoteTable({ room: ROOM }) : new LocalTable({ seat: 0 });
+  table = ROOM ? new RemoteTable({ room: ROOM })
+    : new LocalTable({ seat: 0, poolTarget: setup.poolTarget, stalingrad: setup.stalingrad });
   if (table.onError) table.onError = (code) => {
     const text = t('err.joinFailed', { msg: t('err.' + code) });
     $('status').textContent = text;
@@ -475,6 +527,9 @@ function newGame() {
   table.onState(render);
   table.run();
 }
+
+// online: the room owns the settings, so there is nothing to ask
+const newGame = () => (ROOM ? startGame() : openSetup(startGame));
 
 renderStatic();
 $('newgame').onclick = () => {

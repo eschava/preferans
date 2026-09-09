@@ -1,5 +1,5 @@
 // Bot policies. They only ever see viewFor(seat) — no peeking at other hands.
-import { SUITS, rankIdx, suitOf, trumpOf, contractRank, allContracts, WHIST_DUTY } from './engine.js';
+import { SUITS, rankIdx, suitOf, trumpOf, contractRank, allContracts, mustWhist, WHIST_DUTY } from './engine.js';
 import { bestCard } from './solver.js';
 
 const bySuit = (hand, s) => hand.filter((c) => suitOf(c) === s);
@@ -119,6 +119,7 @@ export const expectedDefence = (hand, trump) => 0.47 * estimateTricks(hand, trum
 // Whist when the pair can carry its duty: a shortfall goes into the whisters'
 // mountain, and if the partner passes you carry the whole of it alone.
 export function chooseWhist(v) {
+  if (mustWhist(v)) return { type: 'whist', whist: true };      // no choice on a six of spades
   const est = expectedDefence(v.hands[v.you], trumpOf(v.contract));
   const duty = WHIST_DUTY[v.contract.level] ?? 0;
   const partner = defenderPartner(v);

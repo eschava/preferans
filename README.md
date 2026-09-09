@@ -120,6 +120,15 @@ into text through the dictionary in `i18n.js`. That is why the language switches
 on the fly — together with the rank letters on the cards (A/K/Q/J against
 Т/К/Д/В) and the log already played.
 
+## Game settings
+
+A dialog opens before the first deal and again on every new game: how far the
+pool runs (10, 20 or 50) and whether **Stalingrad** is on — on a six of spades,
+the cheapest game there is, the defence may not wave the deal through and both
+must whist. The choice is remembered in `localStorage`, so the dialog opens on
+what was last played. An online room takes its settings from the server, so
+joining one skips the dialog.
+
 ## Rules implemented
 
 - 32-card deck, 10 cards each, 2 to the talon.
@@ -142,7 +151,8 @@ on the fly — together with the rank letters on the cards (A/K/Q/J against
   why the bidding always ends. Nobody can repeat the first hand's bid.
 - The talon is turned up for everyone; the declarer discards 2 cards and names
   the contract (no lower than the winning bid).
-- Whist or pass in two rounds; on misère there is no whisting.
+- Whist or pass in two rounds; on misère there is no whisting. With
+  **Stalingrad** on there is no passing a six of spades either.
 - Play: following suit is **compulsory**, and if void you **must trump**. Nobody
   is obliged to beat: you may duck under a higher card, and you are not forced
   to overtrump either.
