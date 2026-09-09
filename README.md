@@ -24,8 +24,12 @@ becomes `?room=CODE`, and the header carries a chip that copies the link when
 clicked. Anyone with the code joins from their own dialog, or just by opening
 the link.
 
-Until people take them, the free seats are played by the same bots, and every
-seat says whether a person or a bot holds it. A seat is yours for as long as you
+Nothing is dealt out until you say so: the table waits while your friends read
+the code and sit down, they see who else is seated, and you press **Start the
+game** when the company is complete. Whatever seats are still free then are
+played by the same bots, and every seat says whether a person or a bot holds it.
+Starting the table over from the menu is the host's call too — everyone stays in
+their seat and the settings stay as they were. A seat is yours for as long as you
 hold its token: your browser keeps it, so a reload drops you back into the same
 hand. Lose the connection and the seat waits a minute for you before a bot takes
 over — come back later and you get it back if nobody else has sat down.

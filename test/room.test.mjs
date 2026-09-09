@@ -56,6 +56,22 @@ try {
   assert.equal(v2.hands[0], null, 'and neither player can read the other');
   assert.equal(v2.hands[2], null);
 
+  // nothing is played until the host says so
+  assert.equal(v0.started, false, 'a fresh table waits for its host');
+  assert.equal(v0.hostSeat, 0);
+  const early = await post(`/api/room/${made.room}/action`, { token: p2.token, action: { type: 'bid', contract: null } });
+  assert.equal(early.error, 'notStarted', 'and nobody can act meanwhile');
+  assert.equal((await post(`/api/room/${made.room}/action`, { token: p2.token, action: { type: 'start' } })).error,
+    'notHost', 'starting is the host\'s call');
+  assert.deepEqual(await post(`/api/room/${made.room}/action`, { token: made.token, action: { type: 'start' } }), { ok: true });
+  const running = await first(`${B}/api/room/${made.room}/stream?token=${made.token}`);
+  assert.equal(running.started, true);
+  assert.equal(running.deal, 1);
+
+  // the host can deal the table over; a guest cannot
+  assert.equal((await post(`/api/room/${made.room}/action`, { token: p3.token, action: { type: 'newgame' } })).error, 'notHost');
+  assert.deepEqual(await post(`/api/room/${made.room}/action`, { token: made.token, action: { type: 'newgame' } }), { ok: true });
+
   // the token is the seat: the code alone gets you nothing
   assert.equal((await first(`${B}/api/room/${made.room}/stream?token=made-up`)).error, 'badToken');
   assert.equal((await post('/api/room/ZZZZZ/join', {})).error, 'noRoom');

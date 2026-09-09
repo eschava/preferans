@@ -335,6 +335,14 @@ function renderActions() {
   const hint = (t) => box.insertAdjacentHTML('beforeend', `<div class="hint">${t}</div>`);
   const row = () => { const r = document.createElement('div'); r.className = 'row'; box.append(r); return r; };
 
+  // an online table waits for its host to start; until then nobody acts
+  if (view.started === false) {
+    const host = view.hostSeat === view.you;
+    hint(host ? t('lobby.host', { code: ROOM })
+      : t('lobby.guest', { player: playerName(view, view.hostSeat) }));
+    if (host) row().append(btn(t('btn.startGame'), () => table.send({ type: 'start' }), 'primary'));
+    return;
+  }
   if (view.phase === 'game_over') {
     hint(t('hint.gameOver'));
     row().append(btn(t('app.pool'), openPulka));
@@ -397,6 +405,7 @@ function toggleDiscard(c) {
 function render(v) {
   view = v;
   if (v.phase !== 'talon') discardSel = [];
+  showCode();                    // whether the table is yours to restart is in the view
   $('status').textContent = t('app.status', { deal: v.deal, target: v.poolTarget });
   $('table').classList.toggle('wide-seats', [0, 1, 2].some((i) => i !== v.you && (v.dealt || v.hands[i])));
   // a finished deal puts every hand on the table at once: a narrow screen sizes for it
@@ -430,7 +439,8 @@ function render(v) {
 function showCode() {
   const el = $('roomcode');
   el.hidden = !ROOM;
-  $('newgame').disabled = !!ROOM;            // online: the room owns the game
+  // online, only the host restarts the table
+  $('newgame').disabled = !!ROOM && !(view && view.hostSeat === view.you);
   if (!ROOM) return;
   const label = () => { el.textContent = `${t('app.code')}: ${ROOM}`; };
   label();
@@ -608,8 +618,13 @@ function startGame(token) {
   showCode();
 }
 
-// online: the room owns the settings, so there is nothing to ask
-const newGame = () => (ROOM ? startGame() : openSetup(startGame));
+// A room keeps its settings and its seats: the host deals a fresh game into the
+// same table, everyone else gets the setup dialog for a table of their own.
+const newGame = () => {
+  if (!ROOM) return openSetup(startGame);
+  if (table && view && view.hostSeat === view.you) return table.send({ type: 'newgame' });
+  return startGame();
+};
 
 renderStatic();
 $('newgame').onclick = () => {
