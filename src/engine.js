@@ -426,11 +426,19 @@ function scoreDeal(g) {
 
 // The result is zero-sum: raw scores are normalised by their mean, so the three
 // always add up to 0. Fractions are kept exact; the UI does the rounding.
+//
+// The pool is deliberately not in here. The game does not end until all three
+// close it, so at the finish it is the same for everyone and cancels out; all it
+// would do is flatter whoever is ahead in a race that has to end level. Mid-game
+// that reads as nonsense — a player with the biggest mountain shown level with
+// the field because their pool is full. What a closed pool is worth is already
+// paid in whists: the surplus helps the others and every point of help is
+// written as 10 whists.
 export function finalScores(S) {
   const raw = [0, 1, 2].map((i) => {
     const won = S.whists[i].reduce((a, b) => a + b, 0);
     const lost = [0, 1, 2].reduce((a, j) => a + S.whists[j][i], 0);
-    return 10 * S.pool[i] - 10 * S.mountain[i] + won - lost;
+    return -10 * S.mountain[i] + won - lost;
   });
   const mean = (raw[0] + raw[1] + raw[2]) / 3;
   return raw.map((v) => v - mean);

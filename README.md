@@ -163,9 +163,13 @@ on the fly — together with the rank letters on the cards (A/K/Q/J against
   the target. The surplus goes to **help** — it closes the other players' pools,
   every point written as 10 whists against the player helped — and only what
   nobody can take writes off the winner's own mountain.
-- Settlement: `10×(pool − mountain) + whists`, normalised by the mean — the three
-  scores always add up to 0, so it is clear who owes whom. Values can be
-  fractional.
+- Settlement: `whists − 10×mountain`, normalised by the mean — the three scores
+  always add up to 0, so it is clear who owes whom. Values can be fractional.
+  The pool is deliberately absent: the game does not end until all three close
+  it, so at the finish it is the same for everyone, and counting it would only
+  flatter whoever leads a race that has to end level — mid-game it would show a
+  player with the biggest mountain level with the field. What a closed pool is
+  worth is already paid in whists, through the help it gives the others.
 
 ## Bots
 

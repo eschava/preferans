@@ -174,13 +174,19 @@ function cardsIn(x, out = new Set()) {
   console.log(`ok — ${checks} view checks for hidden-card leaks`);
 }
 
-// scoring arithmetic
+// scoring arithmetic — the pool is not in it: every player closes it before the
+// game can end, so it cannot separate them
 {
   const S = { pool: [4, 0, 0], mountain: [0, 2, 0], whists: [[0, 0, 0], [6, 0, 0], [0, 0, 0]] };
   const f = finalScores(S);
   assert.ok(Math.abs(f[0] + f[1] + f[2]) < 1e-9, 'the result is zero-sum');
-  assert.ok(Math.abs((f[0] - f[1]) - (34 - -14)) < 1e-9, 'differences between players are preserved');
-  assert.ok(Math.abs((f[0] - f[2]) - 34) < 1e-9);
+  assert.ok(Math.abs((f[0] - f[1]) - (-6 - -14)) < 1e-9, 'differences between players are preserved');
+  assert.ok(Math.abs((f[0] - f[2]) - -6) < 1e-9);
+  assert.deepEqual(finalScores({ ...S, pool: [10, 10, 10] }), f, 'filling pools does not move the result');
+
+  // the sheet that prompted this: a closed pool must not hide the biggest mountain
+  const g = finalScores({ pool: [10, 0, 0], mountain: [20, 8, 12], whists: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] });
+  assert.ok(g[0] < g[2] && g[2] < g[1], 'the biggest mountain is last, closed pool or not');
 }
 
 // all-pass: the first two tricks are led in the face-up talon suit
