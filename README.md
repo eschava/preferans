@@ -5,6 +5,11 @@
 A web game of three-handed Preferans: you against two bots. The online table
 already works — the same engine runs on the server and bots fill the free seats.
 
+**Play it: [preferans-iwrx.onrender.com](https://preferans-iwrx.onrender.com/)**
+— the current version of this repo, deployed on every push to `main`. It runs on
+Render's free plan, so the first request after a quiet spell wakes the instance
+and takes a few seconds.
+
 ## Running
 
 ```bash
@@ -24,8 +29,8 @@ starts with `npm start`, and the server takes its port from `PORT`. There is
 nothing else to configure — the project has no runtime dependencies and no
 database.
 
-On Render's free plan the instance sleeps after a spell of inactivity and is
-restarted on the next request. Rooms live in the server's memory, so an online
+The instance above is set up exactly this way. On Render's free plan it sleeps
+after a spell of inactivity and is restarted on the next request. Rooms live in the server's memory, so an online
 table does not survive that; a game against bots runs entirely in the browser
 and is unaffected.
 
