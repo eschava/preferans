@@ -439,8 +439,6 @@ function render(v) {
 function showCode() {
   const el = $('roomcode');
   el.hidden = !ROOM;
-  // online, only the host restarts the table
-  $('newgame').disabled = !!ROOM && !(view && view.hostSeat === view.you);
   if (!ROOM) return;
   const label = () => { el.textContent = `${t('app.code')}: ${ROOM}`; };
   label();
@@ -625,6 +623,9 @@ const tokenOf = (code) => { try { return localStorage.getItem('pf.seat.' + code)
 const keepToken = ({ room, token }) => {
   try { localStorage.setItem('pf.seat.' + room, token); } catch { /* private mode */ }
 };
+const forgetToken = (room) => {
+  try { localStorage.removeItem('pf.seat.' + room); } catch { /* private mode */ }
+};
 
 function goRoom(code, token) {
   ROOM = code;
@@ -666,10 +667,21 @@ function startGame(token) {
     : new LocalTable({ seat: 0, ...setup });
   if (table.onSeat) table.onSeat = keepToken;
   if (table.onError) table.onError = (code) => {
-    if (setupdlg.open) return setupError(code);
-    const text = t('err.joinFailed', { msg: t('err.' + code) });
-    $('status').textContent = text;
-    $('actions').innerHTML = `<div class="hint">${text}</div>`;
+    // The table is not there — a server restart forgets its rooms, so an old
+    // link outlives the game it points at. Leave the room rather than sit on a
+    // dead page: the dialog comes back with the code filled in, to try again or
+    // to start something else.
+    const failed = ROOM;
+    table = null;
+    ROOM = null;
+    forgetToken(failed);
+    history.replaceState(null, '', location.pathname);
+    showCode();
+    $('status').textContent = t('err.joinFailed', { msg: t('err.' + code) });
+    openSetup('join');
+    const box = $('setupbody').querySelector('input.code');
+    if (box) box.value = failed;
+    setupError(code);
   };
   table.onState(render);
   table.run();
