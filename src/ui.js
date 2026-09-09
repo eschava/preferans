@@ -498,8 +498,6 @@ function drawSetup(onStart) {
     blame.append(btn(t(key), () => { setup.whistBlame = mode; drawSetup(onStart); },
       setup.whistBlame === mode ? 'primary' : ''));
   body.append(blame);
-  body.append(Object.assign(document.createElement('div'),
-    { className: 'sethint', textContent: t('dlg.setupBlameHint') }));
 
   const box = document.createElement('input');
   box.type = 'checkbox'; box.checked = setup.stalingrad;
