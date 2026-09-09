@@ -340,7 +340,7 @@ const en = {
   'err.joinFailed': 'Could not take a seat: {msg}',
 };
 
-const dicts = { uk, en };
+const dicts = { en, uk };        // order shows in the flag row: the default leads
 export const LANGS = Object.keys(dicts);
 export const LANG_NAMES = { uk: 'Українська', en: 'English' };
 export const LANG_FLAGS = { uk: '🇺🇦', en: '🇬🇧' };

@@ -525,6 +525,8 @@ let setupMode = 'local';         // 'local' | 'create' | 'join' | 'restart'
 function drawSetup() {
   const restart = setupMode === 'restart';
   $('setuptitle').textContent = t(restart ? 'dlg.restartTitle' : 'dlg.setupTitle');
+  $('setuplangs').innerHTML = langButtons();      // the menu is behind a modal dialog
+  $('setuplangs').onclick = pickLang;
   const body = $('setupbody');
   body.innerHTML = '';
 
@@ -595,12 +597,6 @@ function drawSetup() {
   if (table && view && view.phase !== 'game_over')
     body.append(Object.assign(document.createElement('div'),
       { className: 'setnote', textContent: t('dlg.newGameText') }));
-
-  const langs = document.createElement('div');
-  langs.className = 'setlangs';
-  langs.innerHTML = langButtons();
-  langs.onclick = pickLang;
-  body.append(langs);
 
   const acts = $('setupactions');
   acts.innerHTML = '';
