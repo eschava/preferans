@@ -72,30 +72,8 @@ function winnerOf(st, c2seat, c2card) {
   return bs;
 }
 
-// What the tricks past the horizon are worth, roughly: in each suit the highest
-// card still out there takes a trick for whoever holds it. Trumps beat that, so
-// a trump left standing counts for its holder as well. Crude on purpose — it is
-// only there so the search can stop early and spend the time on more deals.
-function staticEval(st) {
-  const live = st.hands[0] | st.hands[1] | st.hands[2];
-  const trumpsOut = st.trumpS >= 0 && (live & (0xff << (st.trumpS * 8))) !== 0;
-  let n = 0;
-  for (let s = 0; s < 4; s++) {
-    const inSuit = live & (0xff << (s * 8));
-    if (!inSuit) continue;
-    if (trumpsOut && s !== st.trumpS) continue;      // a plain top card can still be ruffed
-    const top = 31 - Math.clz32(inSuit);
-    const owner = st.hands[0] & (1 << top) ? 0 : (st.hands[1] & (1 << top) ? 1 : 2);
-    if (st.count[owner]) n++;
-  }
-  return n;
-}
-
 function search(st, alpha, beta, depth) {
   if (!(st.hands[0] | st.hands[1] | st.hands[2])) return 0;
-  // Past the horizon the deal is estimated rather than played out. Only ever at
-  // a trick boundary — half a trick cannot be judged.
-  if (st.n === 0 && st.trickNo >= st.stop) return staticEval(st);
   if (++nodes > nodeLimit) return 0;             // throttled: see setNodeLimit
   const key = `${st.hands[0]},${st.hands[1]},${st.hands[2]},${st.turn},${st.n},${st.p0card},${st.p1card}`;
   const a0 = alpha, b0 = beta;
@@ -210,7 +188,7 @@ export function ddValue({ hands, turn, trump, countSeats, maxSeats }) {
     trickNo: 0, ledSuit: -1, n: 0, p0seat: 0, p0card: 0, p1seat: 0, p1card: 0,
     count: [0, 1, 2].map((s) => countSeats.includes(s)),
     max: [0, 1, 2].map((s) => maxSeats.includes(s)),
-    forced: () => -1, lead: (n, w) => w, tt: new Map(), ttLimit: Infinity, stop: 10,
+    forced: () => -1, lead: (n, w) => w, tt: new Map(), ttLimit: Infinity,
   };
   return exactValue(st, 0);
 }
@@ -220,24 +198,6 @@ export function ddValue({ hands, turn, trump, countSeats, maxSeats }) {
 // few samples; from the middle of the deal the search is nearly free.
 let budgetMs = 250;
 export const setPlayBudget = (ms) => { budgetMs = ms; };
-
-// Depth or breadth. On the opening tricks one exact solve of a whole deal costs
-// the better part of a second, so a bot affords a single guess at the unseen
-// hands — and plays that one guess perfectly. Which trade is better in a suit
-// contract is not settled: head to head over 30 deals x 3 seats, depth won by
-// 146 points on one seed and lost by 268 on the next, so the harness cannot see
-// a difference of that size at that length. Suit play is therefore left exactly
-// as it was.
-//
-// Defending a misère it is the wrong one, because there the hidden hand IS the
-// game: the defenders see each other, and all that is left to work out is where
-// the declarer's dangerous cards sit. On the deal this came from, the exact
-// search led the losing card in 14 samplings out of 15; five tricks deep, with
-// the time buying ten guesses instead of one, it finds the winning lead in 9 to
-// 13 (the count of guesses rides on the clock, so it wanders between runs).
-// The declarer on a misère needs none of this — both defence hands are face up,
-// so almost nothing is hidden from them.
-const horizonFor = (v, me) => (v.contract.misere && me !== v.declarer ? 5 : 10);
 
 export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
   const legal = v.legal;
@@ -288,7 +248,6 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
         hands: masks, turn: (me + 1) % 3, trumpS, trickNo: v.trickNo, ledSuit: ledIdx,
         n: played.length, p0seat: 0, p0card: 0, p1seat: 0, p1card: 0,
         count: countArr, max: maxArr, forced: forcedIdx, lead: leadFor, tt, ttLimit,
-        stop: Math.min(10, v.trickNo + horizonFor(v, me)),
       };
       st.p0seat = played[0].seat; st.p0card = played[0].card;
       if (played.length >= 2) { st.p1seat = played[1].seat; st.p1card = played[1].card; }
