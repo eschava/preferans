@@ -156,16 +156,40 @@ function unseenCards(v) {
   return makeDeck().filter((c) => !seen.has(c));
 }
 
-function dealHidden(v, pool) {
-  for (let i = pool.length - 1; i > 0; i--) {
+const shuffle = (a) => {
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(rnd() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
+    [a[i], a[j]] = [a[j], a[i]];
   }
+  return a;
+};
+
+// Deal the unseen cards into the hands nobody can see. A seat that failed to
+// follow a suit cannot be given that suit back: sampling deals that could not
+// have happened is worse than not sampling at all — it is what let a defence
+// lead a suit the declarer had already shown void in, handing over a free
+// discard, because in most of the deals it imagined the declarer still had to
+// follow. Leftovers stay dead: they are the talon and the discard.
+function dealHidden(v, pool) {
+  const need = [0, 1, 2].map((s) => (v.hands[s] ? 0 : v.handCounts[s]));
+  const voids = v.voids || [[], [], []];
+  const seats = [0, 1, 2];
+  for (let attempt = 0; attempt < 24; attempt++) {
+    shuffle(pool);
+    const out = [[], [], []];
+    for (const c of pool) {
+      const su = suitOf(c);
+      const s = shuffle(seats.slice()).find((k) => out[k].length < need[k] && !voids[k].includes(su));
+      if (s !== undefined) out[s].push(c);
+    }
+    if (seats.every((s) => out[s].length === need[s]))
+      return seats.map((s) => v.hands[s] || out[s]);
+  }
+  // A void nobody can satisfy means the reading is impossible — deal it flat
+  // rather than hand the search an empty hand.
+  shuffle(pool);
   let at = 0;
-  return [0, 1, 2].map((s) => {
-    if (v.hands[s]) return v.hands[s].slice();
-    return pool.slice(at, (at += v.handCounts[s]));   // leftovers stay dead (talon/discard)
-  });
+  return seats.map((s) => v.hands[s] || pool.slice(at, (at += v.handCounts[s])));
 }
 
 // ---- entry point ------------------------------------------------------------

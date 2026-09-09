@@ -368,6 +368,23 @@ function cardsIn(x, out = new Set()) {
   assert.equal(legalActions(off, 1).length, 2);
 }
 
+// Not following a suit is public knowledge, and the only thing a bot has to
+// reason with about a hand it cannot see.
+{
+  setRandom(seeded(23));
+  const g = newGame();
+  g.declarer = 0; g.contract = { level: 6, suit: 'h' }; g.whistDecl = [null, true, true];
+  g.phase = 'play'; g.trick = []; g.trickLead = 0; g.turn = 0; g.trickNo = 0; g.tricks = [0, 0, 0];
+  g.hands = [['sA', 'h7'], ['s8', 'h8'], ['c7', 'd9']];   // seat 2: no spade, no trump
+  g.voids = [[], [], []];
+  applyAction(g, 0, { type: 'play', card: 'sA' });
+  applyAction(g, 1, { type: 'play', card: 's8' });          // followed: says nothing
+  applyAction(g, 2, { type: 'play', card: 'c7' });          // no spade and no trump either
+  assert.deepEqual(g.voids[1], [], 'following a suit shows nothing');
+  assert.deepEqual(g.voids[2], ['s', 'h'], 'a discard shows the led suit AND the trump are gone');
+  assert.deepEqual(viewFor(g, 1).voids[2], ['s', 'h'], 'and the table can see it');
+}
+
 // All-pass: the hand left of the dealer leads the first three tricks, whoever
 // takes them; from the fourth the taker leads as usual.
 {

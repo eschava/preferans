@@ -91,6 +91,7 @@ export function startDeal(g) {
   g.talon = d.slice(30, 32);
   g.talonOpen = false;
   g.bidHistory = [];
+  g.voids = [[], [], []];        // suits each seat has shown it does not hold
   g.passed = [false, false, false];
   g.highBid = null;
   g.highBidder = null;
@@ -328,6 +329,15 @@ function startPlay(g, leader) {
 function doPlay(g, seat, card) {
   if (g.phase !== 'play') throw new Error('notPlay');
   if (!legalCards(g, seat).includes(card)) throw new Error('illegalCard');
+  // Not following the led suit shows the table you hold none of it — and if you
+  // did not trump either, none of the trump. Public knowledge, and the only
+  // thing a bot has to reason with about a hand it cannot see.
+  const led = forcedSuit(g) || (g.trick.length ? suitOf(g.trick[0].card) : null);
+  if (led && suitOf(card) !== led) {
+    if (!g.voids[seat].includes(led)) g.voids[seat].push(led);
+    const tr = trumpOf(g.contract);
+    if (tr && suitOf(card) !== tr && !g.voids[seat].includes(tr)) g.voids[seat].push(tr);
+  }
   g.hands[seat] = g.hands[seat].filter((c) => c !== card);
   g.playedCards.push(card);
   g.trick.push({ player: seat, card });
