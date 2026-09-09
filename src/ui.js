@@ -77,8 +77,14 @@ function renderSeat(seat) {
     : `<div class="tag${role ? '' : ' empty'}">${role || '&nbsp;'}</div>`;
 
   const bot = view.humans && !view.humans[seat] ? ` <small class="bot">${t('seat.bot')}</small>` : '';
+  // Whose move it is, and why the table has gone quiet: a bot's first trick is a
+  // full search and takes seconds, so it says so rather than looking stuck.
+  const live = !['deal_end', 'game_over'].includes(view.phase);
+  const waitingOn = live && view.actor === seat && seat !== view.you
+    ? ` <small class="think">${t(view.humans && view.humans[seat] ? 'seat.toMove' : 'seat.thinking')}</small>`
+    : '';
   if (!mine) {
-    el.innerHTML = `<div class="name">${playerName(view, seat)}${bot}</div>${stake}` +
+    el.innerHTML = `<div class="name">${playerName(view, seat)}${bot}${waitingOn}</div>${stake}` +
       (showTricks ? `<div class="tag">${t('seat.tricks', { n: view.tricks[seat] })}</div>` : '');
     const shown = view.dealt ? view.dealt[seat] : view.hands[seat];
     if (shown) {                                   // cards face up on the table

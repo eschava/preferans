@@ -70,6 +70,7 @@ header h1 { font-size: 20px; margin: 0; letter-spacing: .04em; }
   font: 600 15px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .18em; text-align: center;
 }
 .seat .bot { font-weight: 400; opacity: .6; }
+.seat .think { font-weight: 400; color: var(--accent); }
 button {
   font: inherit; padding: 6px 12px; border-radius: 6px; cursor: pointer;
   border: 1px solid var(--line); background: var(--paper); color: var(--ink);
