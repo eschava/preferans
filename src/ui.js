@@ -489,7 +489,7 @@ $('langs').onclick = (e) => {
   // popups keep their markup between renders, so rebuild whatever is open
   bidMode = null; bidDismissed = null; biddlg.close();
   askMode = null; askdlg.close();
-  if (setupdlg.open) drawSetup(startGame);
+  if (setupdlg.open) drawSetup();
   if (view) render(view);
 };
 
@@ -506,52 +506,95 @@ const setup = {
   whistBlame: stored('pf.blame', 'both'),
 };
 
-function drawSetup(onStart) {
-  $('setuptitle').textContent = t('dlg.setupTitle');
+// The dialog does one of four things, and says which: play the bots here, open a
+// table for friends, walk into somebody's table with their code, or (from the
+// menu, mid-table) deal the same company a fresh game.
+let setupMode = 'local';         // 'local' | 'create' | 'join' | 'restart'
+
+function drawSetup() {
+  const restart = setupMode === 'restart';
+  $('setuptitle').textContent = t(restart ? 'dlg.restartTitle' : 'dlg.setupTitle');
   const body = $('setupbody');
   body.innerHTML = '';
 
-  const pool = document.createElement('div');
-  pool.className = 'setrow';
-  pool.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupPool') }));
-  for (const n of [10, 20, 50])
-    pool.append(btn(String(n), () => { setup.poolTarget = n; drawSetup(onStart); },
-      setup.poolTarget === n ? 'primary' : ''));
-  body.append(pool);
+  // the three ways into a new game; at a table none of them is lit, because the
+  // dialog is offering to deal that table again — picking one leaves it
+  const modes = document.createElement('div');
+  modes.className = 'modes';
+  for (const [m, key] of [['local', 'mode.bots'], ['create', 'mode.create'], ['join', 'mode.join']])
+    modes.append(btn(t(key), () => { setupMode = m; drawSetup(); }, setupMode === m ? 'primary' : ''));
+  body.append(modes);
 
-  const blame = document.createElement('div');
-  blame.className = 'setrow';
-  blame.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupBlame') }));
-  for (const [mode, key] of [['both', 'dlg.blameBoth'], ['short', 'dlg.blameShort']])
-    blame.append(btn(t(key), () => { setup.whistBlame = mode; drawSetup(onStart); },
-      setup.whistBlame === mode ? 'primary' : ''));
-  body.append(blame);
+  if (setupMode === 'join') {
+    // somebody else's table: the code is all you bring, the rules are theirs
+    const row = document.createElement('div');
+    row.className = 'setrow';
+    row.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupCode') }));
+    const code = document.createElement('input');
+    code.className = 'code'; code.maxLength = 5; code.placeholder = '—————';
+    code.oninput = () => { code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); };
+    code.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+    row.append(code);
+    body.append(row);
+    setTimeout(() => code.focus(), 0);
+  } else {
+    body.append(Object.assign(document.createElement('div'),
+      { className: 'sechead', textContent: t('dlg.setupRules') }));
 
-  const box = document.createElement('input');
-  box.type = 'checkbox'; box.checked = setup.stalingrad;
-  box.onchange = () => { setup.stalingrad = box.checked; };
-  const line = document.createElement('label');
-  line.className = 'setrow';
-  line.append(box, Object.assign(document.createElement('span'), { textContent: t('dlg.setupStalingrad') }),
-    Object.assign(document.createElement('small'), { textContent: t('dlg.setupStalingradHint') }));
-  body.append(line);
+    const pool = document.createElement('div');
+    pool.className = 'setrow';
+    pool.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupPool') }));
+    for (const n of [10, 20, 50])
+      pool.append(btn(String(n), () => { setup.poolTarget = n; drawSetup(); },
+        setup.poolTarget === n ? 'primary' : ''));
+    body.append(pool);
 
-  // joining somebody else's table: the code is all you need, and the settings
-  // above are theirs, not yours
-  const join = document.createElement('div');
-  join.className = 'setrow';
-  join.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupJoin') }));
-  const code = document.createElement('input');
-  code.className = 'code'; code.maxLength = 5; code.placeholder = '—————';
-  code.oninput = () => { code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); };
-  code.onkeydown = (e) => { if (e.key === 'Enter' && code.value.length === 5) joinRoom(code.value); };
-  join.append(code, btn(t('btn.join'), () => code.value.length === 5 && joinRoom(code.value)));
-  body.append(join);
+    const blame = document.createElement('div');
+    blame.className = 'setrow';
+    blame.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupBlame') }));
+    for (const [mode, key] of [['both', 'dlg.blameBoth'], ['short', 'dlg.blameShort']])
+      blame.append(btn(t(key), () => { setup.whistBlame = mode; drawSetup(); },
+        setup.whistBlame === mode ? 'primary' : ''));
+    body.append(blame);
+
+    const box = document.createElement('input');
+    box.type = 'checkbox'; box.checked = setup.stalingrad;
+    box.onchange = () => { setup.stalingrad = box.checked; };
+    const line = document.createElement('label');
+    line.className = 'setrow';
+    line.append(box, Object.assign(document.createElement('span'), { textContent: t('dlg.setupStalingrad') }),
+      Object.assign(document.createElement('small'), { textContent: t('dlg.setupStalingradHint') }));
+    body.append(line);
+  }
+
+  // there is a game behind this dialog, and starting another ends it
+  if (table && view && view.phase !== 'game_over')
+    body.append(Object.assign(document.createElement('div'),
+      { className: 'setnote', textContent: t('dlg.newGameText') }));
 
   const acts = $('setupactions');
   acts.innerHTML = '';
-  acts.append(btn(t('btn.createOnline'), () => { remember(); openOnline(); }));
-  acts.append(btn(t('btn.start'), () => { remember(); setupdlg.close(); onStart(); }, 'primary'));
+  if (table) acts.append(btn(t('btn.cancel'), () => setupdlg.close()));
+  acts.append(btn(t({ local: 'btn.playBots', create: 'btn.createTable', join: 'btn.join',
+    restart: 'btn.dealAgain' }[setupMode]), go, 'primary'));
+}
+
+// What the dialog's one button does, per mode.
+function go() {
+  remember();
+  if (setupMode === 'join') {
+    const code = $('setupbody').querySelector('input.code').value;
+    return code.length === 5 && joinRoom(code);
+  }
+  if (setupMode === 'create') return openOnline();
+  if (setupMode === 'restart') {
+    setupdlg.close();
+    return table.send({ type: 'newgame', opts: { ...setup } });
+  }
+  ROOM = null;
+  history.replaceState(null, '', location.pathname);
+  setupdlg.close();
+  startGame();
 }
 
 const remember = () => {
@@ -595,8 +638,9 @@ function setupError(code) {
   box.insertAdjacentHTML('beforeend', `<div class="warn">${msg}</div>`);
 }
 
-function openSetup(onStart) {
-  drawSetup(onStart);
+function openSetup(mode) {
+  setupMode = mode;
+  drawSetup();
   if (!setupdlg.open) setupdlg.showModal();
 }
 // with no game behind it there is nothing to go back to, so Esc does not close it
@@ -618,19 +662,15 @@ function startGame(token) {
   showCode();
 }
 
-// A room keeps its settings and its seats: the host deals a fresh game into the
-// same table, everyone else gets the setup dialog for a table of their own.
-const newGame = () => {
-  if (!ROOM) return openSetup(startGame);
-  if (table && view && view.hostSeat === view.you) return table.send({ type: 'newgame' });
-  return startGame();
-};
+// The menu: a room keeps its seats, so the host deals a fresh game into the same
+// table and may change the rules while doing it. Off a table, the usual dialog.
+const newGame = () => openSetup(ROOM && view && view.hostSeat === view.you ? 'restart' : 'local');
+
+// Opening the page: a link with a room code walks straight in — the table is
+// already set and its rules are the host's — otherwise ask what to play.
+const boot = () => (ROOM ? startGame() : openSetup('local'));
 
 renderStatic();
-$('newgame').onclick = () => {
-  closeMenu();
-  if (!view || view.phase === 'game_over') return newGame();
-  confirmAsk(t('dlg.newGameAsk'), t('dlg.newGameText'), newGame, t('app.newGame'));
-};
+$('newgame').onclick = () => { closeMenu(); newGame(); };
 $('showpulka').onclick = () => { closeMenu(); openPulka(); };
-newGame();
+boot();

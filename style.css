@@ -166,6 +166,14 @@ dialog {
 dialog h2 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
 dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
 .setrow { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+/* the three ways in: one row, one of them lit */
+.modes { display: flex; gap: 6px; margin-bottom: 14px; }
+.modes button { flex: 1; padding: 9px 6px; }
+.setnote { opacity: .65; font-size: 12.5px; margin-top: 14px; }
+.sechead {
+  font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .6;
+  margin: 16px 0 6px; padding-top: 12px; border-top: 1px solid #ffffff1f;
+}
 .setrow small { opacity: .7; }
 .setrow input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
 .warn { margin-top: 8px; color: var(--accent); }

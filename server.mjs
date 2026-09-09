@@ -31,6 +31,13 @@ const newCode = () => {
   return code;
 };
 
+// House rules, as the host set them — never trusted as they arrive.
+const rules = (o = {}) => ({
+  poolTarget: [10, 20, 50].includes(o.poolTarget) ? o.poolTarget : 10,
+  stalingrad: !!o.stalingrad,
+  whistBlame: o.whistBlame === 'short' ? 'short' : 'both',
+});
+
 // Every game is created by somebody, with their settings. Nothing is played
 // until they say so: the table waits while friends read the code and sit down,
 // and whatever seats are still free when they start are played by bots.
@@ -118,11 +125,7 @@ const server = http.createServer(async (req, res) => {
   // create a table: the settings are the ones the host picked
   if (url.pathname === '/api/room' && req.method === 'POST') {
     const o = await readBody(req).catch(() => ({}));
-    const code = create({
-      poolTarget: [10, 20, 50].includes(o.poolTarget) ? o.poolTarget : 10,
-      stalingrad: !!o.stalingrad,
-      whistBlame: o.whistBlame === 'short' ? 'short' : 'both',
-    });
+    const code = create(rules(o));
     const r = rooms.get(code);
     const token = take(r, 0);
     r.host = token;                 // the table is theirs to start and to restart
@@ -181,7 +184,7 @@ const server = http.createServer(async (req, res) => {
     // deal — the engine knows nothing about either
     if (action?.type === 'start' || action?.type === 'newgame') {
       if (token !== r.host) return json(res, 403, { error: 'notHost' });
-      if (action.type === 'newgame') r.game = deal(r.opts);
+      if (action.type === 'newgame') { r.opts = rules(action.opts ?? r.opts); r.game = deal(r.opts); }
       r.started = true;
       push(r);
       runBots(r);

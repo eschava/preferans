@@ -18,8 +18,13 @@ node server.mjs        # http://localhost:8080
 
 ## Playing with people
 
-The settings dialog has a **Create a table** button. It opens a game on the
-server with your settings and gives you a five-character code — the address bar
+The dialog that opens a game asks one thing first: **against bots**, **create a
+table**, or **join** one with a code. The first two then show the house rules —
+pool target, who carries a whist shortfall, Stalingrad — and the third shows
+only the code field, because at somebody else's table the rules are theirs.
+
+Creating opens a game on the server with your rules and gives you a
+five-character code — the address bar
 becomes `?room=CODE`, and the header carries a chip that copies the link when
 clicked. Anyone with the code joins from their own dialog, or just by opening
 the link.
@@ -28,8 +33,10 @@ Nothing is dealt out until you say so: the table waits while your friends read
 the code and sit down, they see who else is seated, and you press **Start the
 game** when the company is complete. Whatever seats are still free then are
 played by the same bots, and every seat says whether a person or a bot holds it.
-Starting the table over from the menu is the host's call too — everyone stays in
-their seat and the settings stay as they were. A seat is yours for as long as you
+Starting the table over from the menu is the host's call too: the dialog opens
+on that table — the rules, a note that the running game will be lost, and **Deal
+again** — so the company keeps its seats and can change the rules while they are
+at it. Picking one of the three modes instead leaves the table. A seat is yours for as long as you
 hold its token: your browser keeps it, so a reload drops you back into the same
 hand. Lose the connection and the seat waits a minute for you before a bot takes
 over — come back later and you get it back if nobody else has sat down.
