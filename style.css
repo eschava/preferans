@@ -46,7 +46,7 @@ header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 #menu[hidden] { display: none; }
 #menu > button { width: 100%; text-align: left; }
 #langs { display: flex; gap: 6px; padding-top: 6px; border-top: 1px solid #ffffff1f; }
-.dlghead { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.dlghead { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .dlghead h2 { margin: 0; }
 #setuplangs { display: flex; gap: 6px; }
 #setuplangs .lang { flex: none; width: 38px; padding: 3px 0; font-size: 17px; }
