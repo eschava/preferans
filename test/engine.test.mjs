@@ -256,8 +256,9 @@ function cardsIn(x, out = new Set()) {
   g.tricks = [9, 0, 0]; g.trickNo = 9; g.hands = [[], ['h7'], []];
   g.phase = 'play'; g.trick = [{ player: 2, card: 'h9' }, { player: 0, card: 'hA' }]; g.turn = 1;
   applyAction(g, 1, { type: 'play', card: 'h7' });            // defence took 0 of the 2 owed
-  assert.equal(g.score.mountain[1], 4, 'shortfall 2 x value 4, split evenly');
-  assert.equal(g.score.mountain[2], 4);
+  // both took nothing, so both are short of their half whichever way it is set
+  assert.equal(g.score.mountain[1], 8, 'shortfall 2 x the game\'s full value 4');
+  assert.equal(g.score.mountain[2], 8);
   assert.ok(g.log.some((l) => l.k === 'score.whistShort'));
 }
 
@@ -318,6 +319,28 @@ function cardsIn(x, out = new Set()) {
   assert.equal(g.score.mountain[0], 12);             // 3 short x value 4
   assert.equal(g.score.whists[1][0], 12);            // whister: 3 tricks x 4
   assert.equal(g.score.whists[2][0], 0);             // passer records nothing
+}
+
+// A missing trick costs the game's full value; who carries it is a setting.
+{
+  const play = (blame, whistDecl) => {
+    const g = newGame({ whistBlame: blame });
+    g.declarer = 0; g.contract = { level: 7, suit: 'h' }; g.whistDecl = whistDecl;
+    g.tricks = [7, 1, 0]; g.trickNo = 9; g.hands = [['hA'], [], []];
+    g.phase = 'play'; g.trick = [{ player: 1, card: 'h7' }, { player: 2, card: 'h8' }]; g.turn = 0;
+    applyAction(g, 0, { type: 'play', card: 'hA' });     // declarer takes the last: 8 / 1 / 0
+    return g.score;
+  };
+  // a seven owes 2, the defence took 1: one trick short, worth the game's 4
+  assert.deepEqual(play('both', [null, true, true]).mountain, [0, 4, 4],
+    'both whisters carry the full value of the trick, never half of it each');
+  const short = play('short', [null, true, true]);
+  assert.deepEqual(short.mountain, [0, 0, 4],
+    'only the whister who did not take his half of the duty');
+  assert.equal(short.whists[1][0], 4, 'the trick he did take is still written to him');
+  for (const blame of ['both', 'short'])
+    assert.deepEqual(play(blame, [null, true, false]).mountain, [0, 4, 0],
+      'a lone whister carries it whichever way the setting is set');
 }
 
 // "Stalingrad": on a six of spades the defence may not wave the deal through.

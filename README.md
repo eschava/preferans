@@ -123,9 +123,10 @@ on the fly — together with the rank letters on the cards (A/K/Q/J against
 ## Game settings
 
 A dialog opens before the first deal and again on every new game: how far the
-pool runs (10, 20 or 50) and whether **Stalingrad** is on — on a six of spades,
-the cheapest game there is, the defence may not wave the deal through and both
-must whist. The choice is remembered in `localStorage`, so the dialog opens on
+pool runs (10, 20 or 50), who carries a whist shortfall (every whister, or only
+the one who did not take his half of the duty), and whether **Stalingrad** is on
+— on a six of spades, the cheapest game there is, the defence may not wave the
+deal through and both must whist. The choice is remembered in `localStorage`, so the dialog opens on
 what was last played. An online room takes its settings from the server, so
 joining one skips the dialog.
 
@@ -158,8 +159,11 @@ joining one skips the dialog.
   to overtrump either.
 - The game runs until **all three** close their pool, not the first one to do so.
 - **The whisters' duty**: between them they owe 4 tricks on a six, 2 on a seven,
-  1 on an eight or a nine. A shortfall is written into the whisters' mountain at
-  the contract's value, split evenly; a lone whister carries all of it.
+  1 on an eight or a nine — the count is for the pair, not for each. Every
+  missing trick is written into the mountain at the contract's **full** value;
+  that price is never halved or split. Who writes it is a setting: every whister,
+  or only a whister who did not take his half of the duty. A lone whister carries
+  it either way.
 - **Open play**: on misère the whisters lay their cards on the table. On a normal
   contract, when one whists and the other passes, this is *whist in the light*:
   **both** defence hands go face up and the whister plays them both (switched off

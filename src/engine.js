@@ -71,6 +71,7 @@ export function newGame(opts = {}) {
     poolTarget: opts.poolTarget ?? 10,
     openOnHalfWhist: opts.openOnHalfWhist ?? true,
     stalingrad: opts.stalingrad ?? false,   // whisting a six of spades is compulsory
+    whistBlame: opts.whistBlame ?? 'both',  // who carries a shortfall: 'both' | 'short'
     deal: 0,
     dealer: 2,
     score: { pool: [0, 0, 0], mountain: [0, 0, 0], whists: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] },
@@ -412,8 +413,16 @@ function scoreDeal(g) {
     const duty = WHIST_DUTY[c.level];
     const defTricks = defs.reduce((a, d) => a + g.tricks[d], 0);
     if (whisters.length && !g.conceded && defTricks < duty) {
-      const pen = (duty - defTricks) * V / whisters.length;   // V is even, so this divides evenly
-      for (const w of whisters) {
+      // A missing trick costs the game's full value — that price is never halved
+      // or split. Who carries it is the house convention: everyone who whisted,
+      // or only a whister who did not take his half of the duty. When the pair
+      // is short at least one of them is below half, so 'short' always finds
+      // somebody to charge.
+      const pen = (duty - defTricks) * V;
+      const carry = g.whistBlame === 'short' && whisters.length > 1
+        ? whisters.filter((d) => g.tricks[d] < duty / whisters.length)
+        : whisters;
+      for (const w of carry) {
         S.mountain[w] += pen;
         lines.push({ k: 'score.whistShort', p: { player: w, got: defTricks, duty, n: pen } });
       }

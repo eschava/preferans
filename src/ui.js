@@ -472,7 +472,11 @@ const ROOM = new URLSearchParams(location.search).get('room');
 const stored = (k, dflt) => {
   try { const v = localStorage.getItem(k); return v === null ? dflt : JSON.parse(v); } catch { return dflt; }
 };
-const setup = { poolTarget: stored('pf.pool', 10), stalingrad: stored('pf.stalingrad', false) };
+const setup = {
+  poolTarget: stored('pf.pool', 10),
+  stalingrad: stored('pf.stalingrad', false),
+  whistBlame: stored('pf.blame', 'both'),
+};
 
 function drawSetup(onStart) {
   $('setuptitle').textContent = t('dlg.setupTitle');
@@ -486,6 +490,16 @@ function drawSetup(onStart) {
     pool.append(btn(String(n), () => { setup.poolTarget = n; drawSetup(onStart); },
       setup.poolTarget === n ? 'primary' : ''));
   body.append(pool);
+
+  const blame = document.createElement('div');
+  blame.className = 'setrow';
+  blame.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupBlame') }));
+  for (const [mode, key] of [['both', 'dlg.blameBoth'], ['short', 'dlg.blameShort']])
+    blame.append(btn(t(key), () => { setup.whistBlame = mode; drawSetup(onStart); },
+      setup.whistBlame === mode ? 'primary' : ''));
+  body.append(blame);
+  body.append(Object.assign(document.createElement('div'),
+    { className: 'sethint', textContent: t('dlg.setupBlameHint') }));
 
   const box = document.createElement('input');
   box.type = 'checkbox'; box.checked = setup.stalingrad;
@@ -502,6 +516,7 @@ function drawSetup(onStart) {
     try {
       localStorage.setItem('pf.pool', String(setup.poolTarget));
       localStorage.setItem('pf.stalingrad', String(setup.stalingrad));
+      localStorage.setItem('pf.blame', JSON.stringify(setup.whistBlame));
     } catch { /* private mode */ }
     setupdlg.close();
     onStart();
@@ -518,7 +533,7 @@ setupdlg.addEventListener('cancel', (e) => { if (!table) e.preventDefault(); });
 function startGame() {
   logLines = []; logSeen = -1; logDeal = 0; discardSel = []; pulkaShownFor = 0;
   table = ROOM ? new RemoteTable({ room: ROOM })
-    : new LocalTable({ seat: 0, poolTarget: setup.poolTarget, stalingrad: setup.stalingrad });
+    : new LocalTable({ seat: 0, ...setup });
   if (table.onError) table.onError = (code) => {
     const text = t('err.joinFailed', { msg: t('err.' + code) });
     $('status').textContent = text;

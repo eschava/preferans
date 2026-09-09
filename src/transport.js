@@ -5,11 +5,11 @@ import { newGame, applyAction, viewFor, controllerOf } from './engine.js';
 import { botAction } from './bots.js';
 
 export class LocalTable {
-  constructor({ seat = 0, players, poolTarget, stalingrad, botDelay = 700 } = {}) {
+  constructor({ seat = 0, players, poolTarget, stalingrad, whistBlame, botDelay = 700 } = {}) {
     this.seat = seat;
     this.botDelay = botDelay;
     this.listeners = [];
-    this.game = newGame({ players, poolTarget, stalingrad });
+    this.game = newGame({ players, poolTarget, stalingrad, whistBlame });
     this.timer = null;
   }
   onState(cb) { this.listeners.push(cb); this.emit(); }
