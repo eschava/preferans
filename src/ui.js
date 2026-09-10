@@ -216,10 +216,7 @@ function openPulka() {
   else if (view.phase === 'game_over') acts.append(btn(t('app.newGame'), () => { pulkadlg.close(); newGame(); }, 'primary'));
   // The deal is over and every hand is on the table: it can be played again from
   // the start, as a trial run that changes nothing on this sheet.
-  if (sv.dealt && !view.replay) {
-    acts.append(btn(t('btn.replay'), startReplay));
-    $('pulkanote').textContent = t('app.replayWarn');
-  } else $('pulkanote').textContent = '';
+  if (sv.dealt && !view.replay) acts.append(btn(t('btn.replay'), askReplay));
   acts.append(btn(t('btn.close'), () => pulkadlg.close()));
   if (!pulkadlg.open) pulkadlg.showModal();
 }
@@ -728,6 +725,15 @@ function startGame(token) {
 // of its own, here in the browser even when the real game is online. The real
 // table keeps running behind it — its states are ignored while this one is on
 // screen — and comes back untouched, score and all.
+// That a trial run is written down nowhere has to be said before it starts, not
+// after — so the sheet steps aside for the question and comes back on a no.
+function askReplay() {
+  pulkadlg.close();
+  ask({ mode: 'confirm', title: t('btn.replay'), text: t('app.replayWarn'), buttons: [
+    { label: t('btn.replay'), cls: 'primary', fn: startReplay },
+    { label: t('btn.cancel'), fn: openPulka }] });
+}
+
 function startReplay() {
   const from = mainView || view;
   if (!from.dealt) return;
