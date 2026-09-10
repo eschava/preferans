@@ -6,6 +6,9 @@ import {
   forcedSuit, suitOf, RASPAS_TRICK,
 } from '../src/engine.js';
 import { botAction } from '../src/bots.js';
+import { setNodeLimit } from '../src/solver.js';
+
+setNodeLimit(20000);   // throttled: this suite checks legality and scoring, not strength
 
 const seeded = (s) => () => { s |= 0; s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
@@ -416,7 +419,7 @@ function cardsIn(x, out = new Set()) {
     phase: 'talon', you: 2, hands: [null, null, hand], highBid,
   });
   const free = declare({ level: 6, suit: 's' });
-  assert.deepEqual(free.contract, { level: 6, suit: 'c' }, 'unforced, it names its own five-card suit');
+  assert.equal(free.contract.suit, 'c', 'unforced, it names its own five-card suit');
 
   const forced = declare({ level: 6, suit: 'd' });                 // clubs are below the bid now
   const trump = forced.contract.suit;

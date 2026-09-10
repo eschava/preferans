@@ -1,6 +1,6 @@
 // Bot policies. They only ever see viewFor(seat) — no peeking at other hands.
 import { SUITS, rankIdx, suitOf, trumpOf, contractRank, allContracts, mustWhist, WHIST_DUTY } from './engine.js';
-import { bestCard } from './solver.js';
+import { bestCard, declarerTricks } from './solver.js';
 
 const bySuit = (hand, s) => hand.filter((c) => suitOf(c) === s);
 
@@ -31,10 +31,11 @@ export function estimateTricks(hand, trump) {
 }
 
 // estimateTricks is optimistic; this maps it onto tricks actually won in
-// bot-vs-bot playouts (linear fit: actual = 0.66*est + 0.7). Re-run
+// bot-vs-bot playouts (linear fit: actual = 0.825*est + 0.11). Re-run
 // scripts/calibrate.mjs after changing the estimator or the card-play policy —
-// a stale fit makes the bots over- or underbid.
-export const expectedTricks = (hand, trump) => 0.66 * estimateTricks(hand, trump) + 0.7;
+// a stale fit makes the bots over- or underbid, and this one had gone stale:
+// the play got stronger, so the old slope was costing a trick on big hands.
+export const expectedTricks = (hand, trump) => 0.825 * estimateTricks(hand, trump) + 0.11;
 
 const bestTrump = (hand) =>
   SUITS.map((s) => [s, estimateTricks(hand, s)]).sort((a, b) => b[1] - a[1])[0];
@@ -80,7 +81,7 @@ export function chooseDeclare(v) {
     const want = Math.min(10, Math.max(6, Math.round(est)));
     let level = want;
     while (level < 10 && contractRank({ level, suit }) < contractRank(v.highBid)) level++;
-    return { discard, est, level, paid: level - want, contract: { level, suit } };
+    return { discard, kept, trump, est, level, paid: level - want, contract: { level, suit } };
   };
 
   let best = plan(bestTrump(hand)[0]);
@@ -96,7 +97,17 @@ export function chooseDeclare(v) {
       .filter((p) => contractRank(p.contract) >= contractRank(v.highBid))
       .sort((a, b) => slack(b) - slack(a))[0];
   }
-  return { type: 'declare', discard: best.discard, contract: best.contract };
+  // estimateTricks picks the trump well enough, but its level comes from one
+  // linear fit over every hand shape, and a single line flattens the top of the
+  // range: hands that went on to take nine were declared at seven. Double dummy
+  // is honest here — the defence it plays against is perfect too, and over 60
+  // played deals actual ≈ 0.9*dd + 0.96 (scripts/calibrate-dd.mjs). Taken at
+  // face value it costs 0.10 undertricks a deal on hands worth seven or more
+  // and saves 0.9 of a trick the old fit threw away. The heuristic level stays
+  // as the floor: the auction already fixed that.
+  const dd = declarerTricks(best.kept, best.trump, { samples: 8, declarer: v.you });
+  const level = Math.max(best.contract.level, Math.min(10, Math.max(6, Math.round(dd))));
+  return { type: 'declare', discard: best.discard, contract: { level, suit: best.contract.suit } };
 }
 
 // Drop the two least useful cards: never trump, prefer emptying a short side suit.

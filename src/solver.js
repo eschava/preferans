@@ -217,6 +217,25 @@ export function ddValue({ hands, turn, trump, countSeats, maxSeats }) {
   return exactValue(st, 0);
 }
 
+// How many tricks a declaring hand takes double dummy, averaged over sampled
+// opponent hands. estimateTricks is one linear fit over every hand shape, so it
+// flattens the ends of the range: hands that take nine came out as seven.
+export function declarerTricks(hand, trump, { samples = 12, declarer = 0 } = {}) {
+  const known = new Set(hand);
+  const pool = makeDeck().filter((c) => !known.has(c));
+  const [d1, d2] = [1, 2].map((k) => (declarer + k) % 3);
+  let total = 0;
+  for (let s = 0; s < samples; s++) {
+    shuffle(pool);
+    const hands = [];
+    hands[declarer] = hand;
+    hands[d1] = pool.slice(0, 10);
+    hands[d2] = pool.slice(10, 20);
+    total += ddValue({ hands, turn: d1, trump, countSeats: [declarer], maxSeats: [declarer] });
+  }
+  return total / samples;
+}
+
 // Sampling is self-tuning: run one determinization, see how long it took, then
 // fit as many more as the time budget allows. Early tricks are expensive and get
 // few samples; from the middle of the deal the search is nearly free.
