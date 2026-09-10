@@ -2,8 +2,10 @@
 
 **English** · [Українська](README.uk.md)
 
-A web game of three-handed Preferans: you against two bots. The online table
-already works — the same engine runs on the server and bots fill the free seats.
+A web game of three-handed Preferans, for people or for bots. Open a table,
+hand out the code and play it with friends — the same engine runs on the server,
+and whatever seats are still free when you start are filled by bots. On your own,
+that is all three seats but yours.
 
 **Play it: [preferans-iwrx.onrender.com](https://preferans-iwrx.onrender.com/)**
 — the current version of this repo, deployed on every push to `main`. It runs on
@@ -253,9 +255,14 @@ The search is cross-checked against an independent brute-force minimax
 chosen, from all three positions in a trick. Head to head against the previous
 heuristic it wins 33 matches out of 48 over four seeds, about +70 points a match.
 
-Bidding is still an evaluation heuristic, empirically fitted against real play
-(`scripts/calibrate.mjs`); re-run it after changing the card play, because
-stronger play shifts the fit and a stale one makes the bots over- or underbid.
+The contract is not guessed either: at the talon the bot counts what the hand
+takes with the **same double-dummy search**, over sampled opponent hands, and
+declares that. One linear fit over every hand shape flattens the ends of the
+range, and that is how a hand that went on to take nine came to be declared at
+seven. The auction itself is still that heuristic, fitted against real play
+(`scripts/calibrate.mjs`, and `scripts/calibrate-dd.mjs` checks the count against
+played deals); re-run them after changing the card play, because stronger play
+shifts the fit and a stale one makes the bots over- or underbid.
 The whist decision weighs the duty: can the pair carry its tricks, and will you
 have to carry them alone if the partner passes. Measured honestly, that is not
 stronger than always whisting — the difference sits within the noise over 600
