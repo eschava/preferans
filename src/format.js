@@ -30,5 +30,6 @@ export function entryText(view, e) {
   if (p.cards !== undefined) p.cards = p.cards.map(cardLabel).join(' ');
   if (p.card) p.card = cardLabel(p.card);          // only a forced trick carries one
   if (p.suit !== undefined) p.suit = suitSym(p.suit);
+  if (Array.isArray(p.split)) p.split = p.split.map((n, i) => `${playerName(view, i)} ${n}`).join(' · ');
   return t(e.k, p);
 }

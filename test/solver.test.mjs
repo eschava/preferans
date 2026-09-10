@@ -129,7 +129,7 @@ for (let n = 0; n < 3; n++) {
     if (g.phase === 'deal_end') { deals++; applyAction(g, 0, { type: 'next' }); continue; }
     const seat = controllerOf(g, g.turn);
     const a = botAction(viewFor(g, seat));
-    if (g.phase === 'play') {
+    if (g.phase === 'play' && a.type === 'play') {          // a settled ending is claimed, not played
       assert.ok(legalCards(g, g.turn).includes(a.card), `solver played an illegal card ${a.card}`);
       cards++;
     }

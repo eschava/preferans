@@ -1,6 +1,6 @@
 // Bot policies. They only ever see viewFor(seat) — no peeking at other hands.
 import { SUITS, rankIdx, suitOf, trumpOf, contractRank, allContracts, mustWhist, WHIST_DUTY } from './engine.js';
-import { bestCard, declarerTricks } from './solver.js';
+import { bestCard, declarerTricks, forcedSplit } from './solver.js';
 
 const bySuit = (hand, s) => hand.filter((c) => suitOf(c) === s);
 
@@ -154,7 +154,17 @@ const defenderPartner = (v) => {
   return others.length ? others[0] : null;
 };
 
+// From this many cards down, every layout of the unseen ones can be tried, so a
+// settled ending can be proved rather than guessed at.
+const CLAIM_FROM = 4;
+
 export function chooseCard(v) {
+  // Nothing left to decide: when the last tricks fall the same way whatever
+  // anybody plays, say so and let the table agree instead of clicking it out.
+  if (!v.claim && !v.claimBlocked && v.hands[v.turn] && v.hands[v.turn].length <= CLAIM_FROM) {
+    const tricks = forcedSplit(v);
+    if (tricks) return { type: 'claim', tricks };
+  }
   return { type: 'play', card: bestCard(v) };
 }
 
@@ -169,7 +179,11 @@ export function botAction(v) {
     case 'bidding': return chooseBid(v);
     case 'talon': return chooseDeclare(v);
     case 'whist': return chooseWhist(v);
-    case 'play': return v.playFor === null ? null : chooseCard(v);
+    // A claim proved from a seat that sees less than this one is true here too,
+    // so there is nothing to check: agree and let the deal be written down.
+    case 'play':
+      if (v.claim) return v.claim.agreed[v.you] ? null : { type: 'claimAccept' };
+      return v.playFor === null ? null : chooseCard(v);
     case 'deal_end': return { type: 'next' };
     default: return null;
   }

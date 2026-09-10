@@ -428,6 +428,59 @@ function cardsIn(x, out = new Set()) {
   assert.equal(forced.discard.filter((c) => suitOf(c) === trump).length, 0, 'and keeps every trump');
 }
 
+// A settled ending: claimed, agreed, and written down without playing it out —
+// and refused, after which it is played out and never asked again.
+{
+  setRandom(seeded(3));
+  const reach = () => {                     // a deal, up to the first claim a bot makes
+    for (let n = 0; n < 40; n++) {
+      const g = newGame({ poolTarget: 10 });
+      for (let guard = 0; guard < 400 && g.phase !== 'deal_end'; guard++) {
+        const seat = controllerOf(g, g.turn);
+        const a = botAction(viewFor(g, seat));   // the bots' own play: only they claim
+        if (a.type === 'claim') return { g, a };
+        applyAction(g, seat, a);
+      }
+    }
+    return null;
+  };
+  const found = reach();
+  assert.ok(found, 'the bots must find a settled ending in forty deals');
+  const { g, a } = found;
+  const left = g.hands[g.turn].length;
+  assert.equal(a.tricks.reduce((x, y) => x + y, 0), left, 'a claim accounts for every trick left');
+
+  // what the claim promises is what playing it out gives, whatever is played
+  const played = JSON.parse(JSON.stringify(g));
+  played.claimBlocked = true;
+  const before = played.tricks.slice();
+  while (played.phase === 'play') {
+    const seat = controllerOf(played, played.turn);
+    applyAction(played, seat, { type: 'play', card: legalCards(played, played.turn)[0] });
+  }
+  assert.deepEqual(played.tricks.map((n, i) => n - before[i]), a.tricks, 'the split is the one that happens');
+
+  const refused = JSON.parse(JSON.stringify(g));
+  applyAction(refused, refused.turn, a);
+  const other = [0, 1, 2].find((s) => !refused.claim.agreed[s]);
+  applyAction(refused, other, { type: 'claimDecline' });
+  assert.equal(refused.claim, null);
+  assert.ok(refused.claimBlocked, 'refused once, played out from here on');
+  assert.equal(refused.phase, 'play');
+  assert.equal(refused.hands[refused.turn].length, left, 'nothing was written down');
+  assert.throws(() => applyAction(refused, refused.turn, a), /badClaim/, 'and it is not asked again');
+
+  const agreed = g;
+  applyAction(agreed, agreed.turn, a);
+  assert.throws(() => applyAction(agreed, agreed.turn, { type: 'play', card: agreed.hands[agreed.turn][0] }),
+    /claimPending|notYourTurn/, 'no cards while the table is answering');
+  for (let guard = 0; guard < 3 && agreed.claim; guard++)
+    applyAction(agreed, agreed.turn, { type: 'claimAccept' });
+  assert.equal(agreed.phase, 'deal_end', 'everybody agreed, so the deal is over');
+  assert.deepEqual(agreed.tricks.map((n, i) => n - before[i]), a.tricks);
+  assert.equal(agreed.tricks.reduce((x, y) => x + y, 0), 10, 'and all ten tricks are accounted for');
+}
+
 // A replay is the same deal over again, on a sheet nobody keeps.
 {
   setRandom(seeded(5));

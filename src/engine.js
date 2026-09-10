@@ -108,6 +108,8 @@ export function startDeal(g, deck) {
   g.trickNo = 0;
   g.result = null;
   g.conceded = false;
+  g.claim = null;            // an ending somebody says is settled, waiting on the others
+  g.claimBlocked = false;    // once refused, the deal is played out to the end
   g.turn = (g.dealer + 1) % 3;
   g.phase = 'bidding';
   g.log = [];
@@ -221,18 +223,21 @@ export function legalActions(g, seat) {
     case 'whist': return mustWhist(g)
       ? [{ type: 'whist', whist: true }]
       : [{ type: 'whist', whist: true }, { type: 'whist', whist: false }];
-    case 'play': return legalCards(g, seat).map((card) => ({ type: 'play', card }));   // see controllerOf
+    case 'play':
+      if (g.claim) return g.claim.agreed[seat] ? [] : [{ type: 'claimAccept' }, { type: 'claimDecline' }];
+      return legalCards(g, seat).map((card) => ({ type: 'play', card }));   // see controllerOf
     case 'deal_end': return [{ type: 'next' }];
     default: return [];
   }
 }
 
 export function applyAction(g, seat, a) {
-  if (a.type === 'play') {
+  if (a.type === 'play' || a.type === 'claim') {
     if (g.phase !== 'play') throw new Error('notPlay');
     if (controllerOf(g, g.turn) !== seat) throw new Error('notYourTurn');
-    return doPlay(g, g.turn, a.card);
+    return a.type === 'play' ? doPlay(g, g.turn, a.card) : doClaim(g, g.turn, a.tricks);
   }
+  if (a.type === 'claimAccept' || a.type === 'claimDecline') return doClaimAnswer(g, seat, a.type === 'claimAccept');
   if (g.phase !== 'deal_end' && g.turn !== seat) throw new Error('notYourTurn');
   switch (a.type) {
     case 'bid': return doBid(g, seat, a.contract);
@@ -339,6 +344,7 @@ function startPlay(g, leader) {
 
 function doPlay(g, seat, card) {
   if (g.phase !== 'play') throw new Error('notPlay');
+  if (g.claim) throw new Error('claimPending');
   if (!legalCards(g, seat).includes(card)) throw new Error('illegalCard');
   // Not following the led suit shows the table you hold none of it — and if you
   // did not trump either, none of the trump. Public knowledge, and the only
@@ -371,6 +377,49 @@ function doPlay(g, seat, card) {
   if (g.trickNo === 10) scoreDeal(g);
   return g;
 }
+
+// ---- a settled ending ------------------------------------------------------
+
+// Somebody says the rest of the deal is decided however it is played, and says
+// exactly how it falls. Nothing is written until every other seat agrees, and a
+// single refusal ends the matter for this deal: it is then played out.
+function doClaim(g, seat, tricks) {
+  if (g.claim || g.claimBlocked) throw new Error('badClaim');
+  if (!Array.isArray(tricks) || tricks.length !== 3) throw new Error('badClaim');
+  const left = g.hands[g.turn].length;
+  if (tricks.some((n) => !Number.isInteger(n) || n < 0) || tricks.reduce((a, b) => a + b, 0) !== left)
+    throw new Error('badClaim');
+  g.claim = { by: seat, tricks, agreed: [0, 1, 2].map((s) => controllerOf(g, s) === seat) };
+  g.log.push({ k: 'log.claim', p: { player: seat, split: tricks } });
+  return waitOnClaim(g, seat);
+}
+
+function doClaimAnswer(g, seat, yes) {
+  if (g.phase !== 'play' || !g.claim) throw new Error('noClaim');
+  if (g.claim.agreed[seat]) throw new Error('notYourTurn');
+  if (!yes) {
+    const by = g.claim.by;
+    g.claim = null;
+    g.claimBlocked = true;                     // asked once, refused once, that is enough
+    g.turn = by;
+    g.log.push({ k: 'log.claimDeclined', p: { player: seat } });
+    return g;
+  }
+  for (let s = 0; s < 3; s++) if (controllerOf(g, s) === seat) g.claim.agreed[s] = true;
+  if (g.claim.agreed.some((ok) => !ok)) return waitOnClaim(g, g.claim.by);
+  g.tricks = g.tricks.map((n, i) => n + g.claim.tricks[i]);
+  g.log.push({ k: 'log.claimAgreed', p: { split: g.claim.tricks } });
+  g.hands = [[], [], []];
+  g.trickNo = 10;
+  g.claim = null;
+  scoreDeal(g);
+  return g;
+}
+
+const waitOnClaim = (g, by) => {
+  g.turn = [0, 1, 2].find((s) => !g.claim.agreed[s]) ?? by;
+  return g;
+};
 
 // ---- scoring ---------------------------------------------------------------
 

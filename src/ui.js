@@ -308,6 +308,26 @@ function openWhist() {
   });
 }
 
+// Somebody at the table says the rest of the deal is settled: agree and it is
+// written down as it stands, or refuse and play it out card by card.
+const splitText = (tricks) =>
+  tricks.map((n, i) => `${playerName(view, i)} ${n}`).join(' · ');
+
+function openClaim() {
+  const c = view.claim;
+  ask({
+    mode: 'claim',
+    title: t('claim.title'),
+    text: t('claim.text', { player: playerName(view, c.by), split: splitText(c.tricks) }),
+    buttons: [
+      { label: t('btn.claimAccept'), cls: 'primary', fn: () => table.send({ type: 'claimAccept' }) },
+      { label: t('btn.claimDecline'), fn: () => table.send({ type: 'claimDecline' }) },
+    ],
+  });
+}
+
+const canClaim = () => view.phase === 'play' && !!view.claim && view.actor === view.you
+  && !view.claim.agreed[view.you];
 const canBid = () => view.phase === 'bidding' && view.turn === view.you;
 const canWhist = () => view.phase === 'whist' && view.turn === view.you;
 const canDeclare = () => view.phase === 'talon' && view.turn === view.you && discardSel.length === 2;
@@ -447,6 +467,8 @@ function render(v) {
   if (!bidMode && canDeclare()) openDeclare();
   if (askMode === 'whist' && !canWhist()) { askMode = null; askdlg.close(); }
   if (!askMode && canWhist()) openWhist();
+  if (askMode === 'claim' && !canClaim()) { askMode = null; askdlg.close(); }
+  if (!askMode && canClaim()) openClaim();
 
   if (pulkadlg.open && v.deal !== pulkaOpenedOn) pulkadlg.close();   // new deal, drop the sheet
   else if (pulkadlg.open) openPulka();

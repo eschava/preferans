@@ -136,6 +136,17 @@ untouched, an online one still streaming, and comes back score and all; the
 sheet on screen stays the real one throughout, because that is the thing the
 trial run is promising not to change.
 
+When the last few tricks are decided, the bot says so instead of playing them:
+a popup names the split — "You 1 · West 2 · East 0" — and it is written down
+unplayed if everybody agrees. Refuse and the deal is played out to the last
+card, and nobody asks again. What is claimed is not a good line or a likely
+one: **every** layout the unseen cards could be in is tried, and in each of them
+every legal line has to end in the same numbers, or there is no claim. That is
+strictly more than the search does for its own play — a value under best play
+says nothing about a defender who throws a trick away — and it is why the claim
+only starts once four cards are left, where the layouts can all be counted. It
+costs under a millisecond in the ordinary case.
+
 In an all-pass deal the talon stays on the table: the face-up card is shown
 large, next to an ALL PASS badge and a hint of which suit must be led.
 

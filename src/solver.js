@@ -192,6 +192,122 @@ function dealHidden(v, pool) {
   return seats.map((s) => v.hands[s] || pool.slice(at, (at += v.handCounts[s])));
 }
 
+// ---- a settled ending -------------------------------------------------------
+
+// Every way the unseen cards could sit in the hands nobody can see. A seat that
+// showed out of a suit is never dealt it back, same as when sampling.
+function layouts(pool, hidden, need, voids) {
+  const combos = (cards, k, ok) => {
+    const res = [];
+    const walk = (start, acc) => {
+      if (acc.length === k) return res.push(acc.slice());
+      for (let i = start; i <= cards.length - (k - acc.length); i++) {
+        if (!ok(cards[i])) continue;
+        acc.push(cards[i]); walk(i + 1, acc); acc.pop();
+      }
+    };
+    walk(0, []);
+    return res;
+  };
+  const free = (seat) => (c) => !voids[seat].includes(suitOf(c));
+  const out = [];
+  for (const first of combos(pool, need[0], free(hidden[0]))) {
+    if (hidden.length === 1) { out.push([[hidden[0], first]]); continue; }
+    const rest = pool.filter((c) => !first.includes(c));
+    for (const second of combos(rest, need[1], free(hidden[1])))
+      out.push([[hidden[0], first], [hidden[1], second]]);
+  }
+  return out;
+}
+
+// How the remaining tricks fall, when they fall the same way down every legal
+// line — not the same way under best play, which is a different and much weaker
+// thing: a claim is offered to somebody who may then play anything at all, so
+// every line has to end in the same numbers or there is nothing to claim.
+// Mirrors search() above for the trick bookkeeping; the value is a split, and
+// one branch disagreeing with another makes the whole node unknowable.
+function forcedWalk(st, depth) {
+  if (!(st.hands[0] | st.hands[1] | st.hands[2])) return [0, 0, 0];
+  if (++nodes > nodeLimit) return null;          // out of budget is simply not proved
+  const key = `${st.hands[0]},${st.hands[1]},${st.hands[2]},${st.turn},${st.n},${st.p0card},${st.p1card}`;
+  const hit = st.ft.get(key);
+  if (hit !== undefined) return hit;
+
+  const seat = st.turn;
+  const savedLed = st.ledSuit;
+  let out;
+  for (const card of moves(st, seat, false, depth).slice()) {
+    st.hands[seat] &= ~(1 << card);
+    let got;
+    if (st.n === 0) {
+      st.p0seat = seat; st.p0card = card; st.n = 1;
+      if (savedLed < 0) st.ledSuit = card >> 3;
+      st.turn = (seat + 1) % 3;
+      got = forcedWalk(st, depth + 1);
+      st.n = 0; st.ledSuit = savedLed;
+    } else if (st.n === 1) {
+      st.p1seat = seat; st.p1card = card; st.n = 2;
+      st.turn = (seat + 1) % 3;
+      got = forcedWalk(st, depth + 1);
+      st.n = 1;
+    } else {
+      const w = winnerOf(st, seat, card);
+      const sN = st.n, s0c = st.p0card, s1c = st.p1card, s0s = st.p0seat, s1s = st.p1seat;
+      st.n = 0; st.trickNo++;
+      st.turn = w;
+      st.ledSuit = -1;
+      const rest = forcedWalk(st, depth + 1);
+      got = rest && rest.map((n, i) => n + (i === w ? 1 : 0));
+      st.trickNo--; st.n = sN; st.p0card = s0c; st.p1card = s1c; st.p0seat = s0s; st.p1seat = s1s;
+      st.ledSuit = savedLed;
+    }
+    st.turn = seat;
+    st.hands[seat] |= 1 << card;
+    if (!got || (out && got.some((n, i) => n !== out[i]))) { out = null; break; }
+    out = got;
+  }
+  st.ft.set(key, out || null);
+  return out || null;
+}
+
+const splitOf = (hands, turn, trump) => forcedWalk({
+  hands: hands.map((h) => h.reduce((m, c) => m | (1 << idx(c)), 0)),
+  turn, trumpS: trump === null ? -1 : SUITS.indexOf(trump),
+  trickNo: 0, ledSuit: -1, n: 0, p0seat: 0, p0card: 0, p1seat: 0, p1card: 0,
+  ft: new Map(),
+}, 0);
+
+// The end of a deal that does not need playing out: the same split in every
+// layout the seats could be holding, and forced in each of them. Unlike the
+// Monte Carlo above this is exhaustive — a claim that skips real cards has to
+// be a proof, not an average — so it only runs when few enough cards are left
+// for every layout to be tried.
+export function forcedSplit(v, { maxLayouts = 1500 } = {}) {
+  if (v.trick.length || !v.contract) return null;         // only at the head of a trick
+  if (v.contract.raspas && v.trickNo < 3) return null;    // the eldest still holds the lead
+  const hidden = [0, 1, 2].filter((s) => !v.hands[s]);
+  if (!hidden.length) return null;
+  const pool = unseenCards(v);
+  const need = hidden.map((s) => v.handCounts[s]);
+  const nCk = (n, k) => { let r = 1; for (let i = 0; i < k; i++) r = (r * (n - i)) / (i + 1); return r; };
+  let bound = 1, left = pool.length;
+  for (const k of need) { bound *= nCk(left, k); left -= k; }
+  if (bound > maxLayouts) return null;
+
+  const trump = trumpOf(v.contract);
+  let split = null;
+  for (const layout of layouts(pool, hidden, need, v.voids || [[], [], []])) {
+    const hands = v.hands.map((h) => h && h.slice());
+    for (const [seat, cards] of layout) hands[seat] = cards;
+    nodes = 0;                     // each layout gets the node budget, as any search does
+    const here = splitOf(hands, v.turn, trump);
+    if (!here) return null;
+    if (!split) split = here;
+    else if (here.some((n, i) => n !== split[i])) return null;
+  }
+  return split;
+}
+
 // ---- entry point ------------------------------------------------------------
 
 function goalOf(v, me) {
