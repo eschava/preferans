@@ -1,4 +1,4 @@
-import { suitOf, contractRank, allContracts, trumpOf, mustWhist, WHIST_DUTY } from './engine.js';
+import { suitOf, contractRank, allContracts, trumpOf, mustWhist, WHIST_DUTY, replayGame } from './engine.js';
 import { contractName, playerName, suitSym, entryText } from './format.js';
 import { t, setLang, getLang, LANGS, LANG_NAMES, LANG_FLAGS } from './i18n.js';
 import { LocalTable, RemoteTable, createRoom } from './transport.js';
@@ -14,6 +14,8 @@ let bidDismissed = null;     // state key the user closed the popup on, so it st
 let pulkaShownFor = 0;       // deal whose result has already been popped up
 let pulkaOpenedOn = 0;       // deal the score-sheet popup was opened on
 let askMode = null;          // what the small popup is currently asking
+let mainTable = null;        // the real game, parked while a replay is on screen
+let mainView = null;
 
 function cardEl(c, cls = '', onClick) {
   const el = document.createElement('div');
@@ -199,16 +201,25 @@ function renderLog() {
 // --- score-sheet popup -------------------------------------------------------------
 
 function openPulka() {
+  // A replay has a score sheet of its own that nobody keeps, so the sheet on
+  // screen is always the real game's — that is the whole point of the warning.
+  const sv = mainView || view;
   pulkaOpenedOn = view.deal;
-  $('points').innerHTML = pointsHTML(view);
-  $('score').innerHTML = scoresheetSVG(view);
-  $('history').innerHTML = historyHTML(view);
+  $('points').innerHTML = pointsHTML(sv);
+  $('score').innerHTML = scoresheetSVG(sv);
+  $('history').innerHTML = historyHTML(sv);
   const acts = $('pulkaactions');
   acts.innerHTML = '';
   if (view.phase === 'deal_end') acts.append(btn(t('btn.nextDeal'), () => {
     pulkadlg.close(); table.send({ type: 'next' });
   }, 'primary'));
   else if (view.phase === 'game_over') acts.append(btn(t('app.newGame'), () => { pulkadlg.close(); newGame(); }, 'primary'));
+  // The deal is over and every hand is on the table: it can be played again from
+  // the start, as a trial run that changes nothing on this sheet.
+  if (sv.dealt && !view.replay) {
+    acts.append(btn(t('btn.replay'), startReplay));
+    $('pulkanote').textContent = t('app.replayWarn');
+  } else $('pulkanote').textContent = '';
   acts.append(btn(t('btn.close'), () => pulkadlg.close()));
   if (!pulkadlg.open) pulkadlg.showModal();
 }
@@ -341,6 +352,8 @@ function renderActions() {
   const hint = (t) => box.insertAdjacentHTML('beforeend', `<div class="hint">${t}</div>`);
   const row = () => { const r = document.createElement('div'); r.className = 'row'; box.append(r); return r; };
 
+  if (view.replay && view.phase !== 'deal_end') row().append(btn(t('btn.backToGame'), endReplay));
+
   // an online table waits for its host to start; until then nobody acts
   if (view.started === false) {
     const host = view.hostSeat === view.you;
@@ -355,9 +368,15 @@ function renderActions() {
     return;
   }
   if (view.phase === 'deal_end') {
-    hint(t('hint.dealOver', {
-      tricks: view.players.map((_, i) => `${playerName(view, i)} ${view.tricks[i]}`).join(' · '),
-    }));
+    const tricks = view.players.map((_, i) => `${playerName(view, i)} ${view.tricks[i]}`).join(' · ');
+    if (view.replay) {
+      hint(t('hint.replayOver', { tricks }));
+      const r = row();
+      r.append(btn(t('btn.replayAgain'), startReplay));
+      r.append(btn(t('btn.backToGame'), endReplay, 'primary'));
+      return;
+    }
+    hint(t('hint.dealOver', { tricks }));
     row().append(btn(t('btn.nextDeal'), () => table.send({ type: 'next' }), 'primary'));
     return;
   }
@@ -412,7 +431,9 @@ function render(v) {
   view = v;
   if (v.phase !== 'talon') discardSel = [];
   showCode();                    // whether the table is yours to restart is in the view
-  $('status').textContent = t('app.status', { deal: v.deal, target: v.poolTarget });
+  $('status').textContent = v.replay ? t('app.replay')
+    : t('app.status', { deal: v.deal, target: v.poolTarget });
+  $('status').classList.toggle('replay', !!v.replay);
   $('table').classList.toggle('wide-seats', [0, 1, 2].some((i) => i !== v.you && (v.dealt || v.hands[i])));
   // a finished deal puts every hand on the table at once: a narrow screen sizes for it
   $('table').classList.toggle('reveal', !!v.dealt);
@@ -432,7 +453,7 @@ function render(v) {
 
   if (pulkadlg.open && v.deal !== pulkaOpenedOn) pulkadlg.close();   // new deal, drop the sheet
   else if (pulkadlg.open) openPulka();
-  else if ((v.phase === 'deal_end' || v.phase === 'game_over') && pulkaShownFor !== v.deal) {
+  else if ((v.phase === 'deal_end' || v.phase === 'game_over') && !v.replay && pulkaShownFor !== v.deal) {
     pulkaShownFor = v.deal;                                          // let the last trick be seen first
     setTimeout(() => {
       if (view.phase === 'deal_end' || view.phase === 'game_over') openPulka();
@@ -676,7 +697,8 @@ function openSetup(mode) {
 setupdlg.addEventListener('cancel', (e) => { if (!table) e.preventDefault(); });
 
 function startGame(token) {
-  logLines = []; logSeen = -1; logDeal = 0; discardSel = []; pulkaShownFor = 0;
+  freshScreen();
+  mainTable = null; mainView = null;
   table = ROOM ? new RemoteTable({ room: ROOM, token: token ?? tokenOf(ROOM), name: myName.trim() })
     : new LocalTable({ seat: 0, ...setup });
   if (table.onSeat) table.onSeat = keepToken;
@@ -697,14 +719,51 @@ function startGame(token) {
     if (box) box.value = failed;
     setupError(code);
   };
-  table.onState(render);
+  attach(table);
   table.run();
   showCode();
 }
 
+// A trial run of the deal just played: the same cards dealt again into a table
+// of its own, here in the browser even when the real game is online. The real
+// table keeps running behind it — its states are ignored while this one is on
+// screen — and comes back untouched, score and all.
+function startReplay() {
+  const from = mainView || view;
+  if (!from.dealt) return;
+  pulkadlg.close();
+  if (!mainTable) { mainTable = table; mainView = from; }
+  freshScreen();
+  table = new LocalTable({ seat: from.you, game: replayGame(from) });
+  attach(table);
+  table.run();
+}
+
+function endReplay() {
+  if (!mainTable) return;
+  pulkadlg.close();
+  table = mainTable; mainTable = null;
+  freshScreen();
+  pulkaShownFor = mainView.deal;          // its sheet has been seen once already
+  render(mainView);
+  mainView = null;
+  table.run();
+}
+
+// The log and the popups belong to whatever table is on screen.
+function freshScreen() {
+  logLines = []; logSeen = -1; logDeal = 0; discardSel = []; pulkaShownFor = 0;
+  bidMode = null; askMode = null; bidDismissed = null;
+}
+
+// Only the table on screen may draw: a replay parks the real one, and an online
+// room goes on streaming states that must not reach the page.
+const attach = (tbl) => tbl.onState((v) => { if (tbl === table) render(v); });
+
 // The menu: a room keeps its seats, so the host deals a fresh game into the same
 // table and may change the rules while doing it. Off a table, the usual dialog.
-const newGame = () => openSetup(ROOM && view && view.hostSeat === view.you ? 'restart' : 'local');
+const newGame = () => { const v = mainView || view;      // a trial run has no table of its own
+  openSetup(ROOM && v && v.hostSeat === v.you ? 'restart' : 'local'); };
 
 // Opening the page: a link with a room code walks straight in — the table is
 // already set and its rules are the host's — otherwise ask what to play.

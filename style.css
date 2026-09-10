@@ -204,6 +204,13 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
 
 #pulkadlg { width: 560px; max-height: 92vh; overflow: auto; }
 #score svg { display: block; width: 100%; height: auto; border-radius: 8px 8px 0 0; }
+/* the warning that a replay changes nothing — loud enough to be read once */
+#pulkanote:not(:empty) {
+  margin-top: 12px; padding: 8px 10px; border-radius: 8px;
+  background: #f5c04222; border: 1px solid #f5c04255; font-size: 13px; line-height: 1.35;
+}
+#status.replay { color: #f5c042; }
+
 #history { margin-top: 12px; font-size: 13px; }
 #history .hcard { background: #ffffff12; border-radius: 8px; padding: 9px 12px; }
 #history .htop { opacity: .8; font-size: 12px; }

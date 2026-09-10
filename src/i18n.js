@@ -7,6 +7,8 @@ const uk = {
   'app.lang': 'Мова',
   'app.menu': 'Меню',
   'app.newGame': 'Нова гра',
+  'app.replay': 'Проба · у пулю не пишеться',
+  'app.replayWarn': 'Ті самі карти ще раз — подивитися, як можна було зіграти інакше. У пулю не піде: записаний результат не зміниться.',
 
   'player.you': 'Ви',
   'player.west': 'Захід',
@@ -51,6 +53,7 @@ const uk = {
   'hint.talon': 'Прикуп ваш. Скиньте 2 карти (обрано {n}/2).',
   'hint.whist': '{player} грає <b>{contract}</b>.',
   'hint.dealOver': 'Роздачу завершено. Взятки: {tricks}',
+  'hint.replayOver': 'Пробу зіграно. Взятки: {tricks}. У пулю це не пішло.',
   'hint.gameOver': 'Гру закінчено.',
 
   'btn.bid': 'Заявка…',
@@ -58,6 +61,9 @@ const uk = {
   'btn.whist': 'Вістувати…',
   'btn.nextDeal': 'Наступна роздача',
   'btn.close': 'Закрити',
+  'btn.replay': 'Переграти',
+  'btn.replayAgain': 'Переграти ще раз',
+  'btn.backToGame': 'Повернутися до партії',
   'btn.pass': 'Пас',
   'btn.cancel': 'Скасувати',
 
@@ -176,6 +182,8 @@ const en = {
   'app.lang': 'Language',
   'app.menu': 'Menu',
   'app.newGame': 'New game',
+  'app.replay': 'Trial run · nothing is written down',
+  'app.replayWarn': 'The same cards again, to see how else the deal could have gone. It does not count: the result already written down stays as it is.',
 
   'player.you': 'You',
   'player.west': 'West',
@@ -220,6 +228,7 @@ const en = {
   'hint.talon': 'The talon is yours. Discard 2 cards ({n}/2 chosen).',
   'hint.whist': '{player} plays <b>{contract}</b>.',
   'hint.dealOver': 'Deal over. Tricks: {tricks}',
+  'hint.replayOver': 'Trial run over. Tricks: {tricks}. Nothing was written down.',
   'hint.gameOver': 'Game over.',
 
   'btn.bid': 'Bid…',
@@ -227,6 +236,9 @@ const en = {
   'btn.whist': 'Whist…',
   'btn.nextDeal': 'Next deal',
   'btn.close': 'Close',
+  'btn.replay': 'Replay',
+  'btn.replayAgain': 'Replay again',
+  'btn.backToGame': 'Back to the game',
   'btn.pass': 'Pass',
   'btn.cancel': 'Cancel',
 

@@ -127,6 +127,15 @@ table above the sheet, in the same order as the seats (left opponent, you,
 right); the change from the last deal stands next to each, green or red. Under
 the sheet is the summary of that one deal.
 
+A deal that is over can be played again: **Replay** on the score sheet deals the
+same cards to the same seats, with the same hand dealing, and lets the whole
+thing be played differently — a trial run, on a sheet nobody keeps. It says so
+in three places: a warning under the sheet, a note in the header instead of the
+deal number, and a way back on the action bar. The real game waits behind it
+untouched, an online one still streaming, and comes back score and all; the
+sheet on screen stays the real one throughout, because that is the thing the
+trial run is promising not to change.
+
 In an all-pass deal the talon stays on the table: the face-up card is shown
 large, next to an ALL PASS badge and a hint of which suit must be led.
 

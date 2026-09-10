@@ -82,8 +82,8 @@ export function newGame(opts = {}) {
   return g;
 }
 
-export function startDeal(g) {
-  const d = shuffle(makeDeck());
+export function startDeal(g, deck) {
+  const d = deck ? deck.slice() : shuffle(makeDeck());
   g.deal++;
   g.dealer = (g.dealer + 1) % 3;
   g.hands = [d.slice(0, 10), d.slice(10, 20), d.slice(20, 30)].map(sortHand);
@@ -112,6 +112,17 @@ export function startDeal(g) {
   g.phase = 'bidding';
   g.log = [];
   return g;
+}
+
+// The deal just finished, over again as a game of its own: same cards, same
+// dealer, same rules — and a score sheet nobody keeps. Everything it needs is in
+// the view, because a finished deal shows all three hands and the talon.
+export function replayGame(v) {
+  const g = newGame(v);                     // newGame reads only the rules and the names
+  g.deal = v.deal - 1;                      // startDeal bumps the deal and passes the
+  g.dealer = (v.dealer + 2) % 3;            // deal on, so start one step behind
+  g.replay = true;                          // the UI says out loud that this counts for nothing
+  return startDeal(g, v.dealt.flat().concat(v.talon || []));
 }
 
 export const defendersOf = (g) => [1, 2].map((k) => (g.declarer + k) % 3);

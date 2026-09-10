@@ -13,11 +13,11 @@ const hire = () => {
 };
 
 export class LocalTable {
-  constructor({ seat = 0, players, poolTarget, stalingrad, whistBlame, botDelay = 700 } = {}) {
+  constructor({ seat = 0, game, players, poolTarget, stalingrad, whistBlame, botDelay = 700 } = {}) {
     this.seat = seat;
     this.botDelay = botDelay;
     this.listeners = [];
-    this.game = newGame({ players, poolTarget, stalingrad, whistBlame });
+    this.game = game || newGame({ players, poolTarget, stalingrad, whistBlame });   // a replay brings its own
     this.timer = null;
     this.worker = hire();
     this.asked = 0;

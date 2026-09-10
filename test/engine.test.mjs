@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   makeDeck, setRandom, newGame, applyAction, viewFor, legalCards, trickWinner,
   contractRank, contractValue, finalScores, canRepeat, sortHand, controllerOf, legalActions,
-  forcedSuit, suitOf, RASPAS_TRICK,
+  forcedSuit, suitOf, replayGame, RASPAS_TRICK,
 } from '../src/engine.js';
 import { botAction } from '../src/bots.js';
 import { setNodeLimit } from '../src/solver.js';
@@ -426,6 +426,26 @@ function cardsIn(x, out = new Set()) {
   assert.ok(contractRank(forced.contract) >= contractRank({ level: 6, suit: 'd' }), 'the bid is honoured');
   assert.ok(hand.filter((c) => suitOf(c) === trump).length >= 3, 'it declares a suit it actually holds');
   assert.equal(forced.discard.filter((c) => suitOf(c) === trump).length, 0, 'and keeps every trump');
+}
+
+// A replay is the same deal over again, on a sheet nobody keeps.
+{
+  setRandom(seeded(5));
+  const g = newGame({ poolTarget: 10, stalingrad: true, whistBlame: 'short' });
+  while (g.phase !== 'deal_end') applyAction(g, controllerOf(g, g.turn), policy(g, controllerOf(g, g.turn)));
+  const r = replayGame(viewFor(g, 0));
+  assert.deepEqual(r.dealt, g.dealt, 'the same cards go to the same seats');
+  assert.deepEqual(r.talon, g.talon, 'and the same talon');
+  assert.equal(r.dealer, g.dealer, 'dealt by the same hand, so the bidding runs the same way round');
+  assert.equal(r.deal, g.deal);
+  assert.equal(r.phase, 'bidding');
+  assert.ok(r.replay, 'and it says so');
+  assert.equal(r.stalingrad, true, 'the house rules come along');
+  assert.equal(r.whistBlame, 'short');
+  assert.deepEqual(r.score.mountain, [0, 0, 0], 'nothing of the real score comes with it');
+  const before = JSON.stringify(g.score);
+  while (r.phase !== 'deal_end') applyAction(r, controllerOf(r, r.turn), policy(r, controllerOf(r, r.turn)));
+  assert.equal(JSON.stringify(g.score), before, 'and playing it out leaves the real game alone');
 }
 
 console.log(`ok — ${deals} deals (${played} played out, ${raspas} all-pass, ${misere} misère), ${RASPAS_TRICK} per trick in an all-pass deal`);
