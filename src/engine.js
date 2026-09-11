@@ -70,6 +70,7 @@ export function newGame(opts = {}) {
     players: opts.players || ['player.you', 'player.west', 'player.east'],
     poolTarget: opts.poolTarget ?? 10,
     openOnHalfWhist: opts.openOnHalfWhist ?? true,
+    humans: opts.humans || [true, false, false],   // seats a person holds: the rest play themselves
     stalingrad: opts.stalingrad ?? false,   // whisting a six of spades is compulsory
     whistBlame: opts.whistBlame ?? 'both',  // who carries a shortfall: 'both' | 'short'
     deal: 0,
@@ -129,12 +130,20 @@ export function replayGame(v) {
 
 export const defendersOf = (g) => [1, 2].map((k) => (g.declarer + k) % 3);
 
-// Whist in the light: when one defender whists and the other passes, the
-// whister plays both defence hands.
+// Who actually plays a hand. Whist in the light: when one defender whists and
+// the other passes, the whister plays both defence hands. On misère both
+// defence hands lie face up, and a bot's is played by the person across the
+// table — there is nothing left to hide from them, and a hand you can already
+// read is better played than watched.
 export function controllerOf(g, seat) {
-  if (g.phase !== 'play' || !g.contract || g.contract.raspas || g.contract.misere) return seat;
-  if (seat === g.declarer || !g.openOnHalfWhist) return seat;
+  if (g.phase !== 'play' || !g.contract || g.contract.raspas) return seat;
+  if (seat === g.declarer) return seat;
   const [d1, d2] = defendersOf(g);
+  if (g.contract.misere) {
+    const other = seat === d1 ? d2 : d1;
+    return (!g.humans[seat] && g.humans[other]) ? other : seat;
+  }
+  if (!g.openOnHalfWhist) return seat;
   if (g.whistDecl[d1] === g.whistDecl[d2]) return seat;
   const whister = g.whistDecl[d1] ? d1 : d2;
   return seat === whister ? seat : whister;

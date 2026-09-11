@@ -52,7 +52,7 @@ const deal = (opts) => newGame({
 
 function create(opts) {
   const code = newCode();
-  rooms.set(code, {
+  const r = {
     game: deal(opts), opts,
     names: [null, null, null],      // what each seat calls itself; a bot seat has none
     started: false,                 // the host holds the table until they start it
@@ -61,7 +61,9 @@ function create(opts) {
     seats: new Map(),               // token -> seat, so a reload comes back to the same hand
     hold: [null, null, null],       // timers releasing a seat whose player dropped out
     clients: [], timer: null, touched: Date.now(),
-  });
+  };
+  r.game.humans = r.human;        // the same array, so seats filling and emptying carry over
+  rooms.set(code, r);
   return code;
 }
 
@@ -206,6 +208,7 @@ const server = http.createServer(async (req, res) => {
       if (action.type === 'newgame') {
         r.opts = rules(action.opts ?? r.opts);
         r.game = deal(r.opts);
+        r.game.humans = r.human;      // a fresh deal, the same people at the table
         label(r);                     // the same company, under the same names
       }
       r.started = true;
