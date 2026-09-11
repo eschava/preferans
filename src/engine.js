@@ -389,6 +389,9 @@ function doClaim(g, seat, tricks) {
   const left = g.hands[g.turn].length;
   if (tricks.some((n) => !Number.isInteger(n) || n < 0) || tricks.reduce((a, b) => a + b, 0) !== left)
     throw new Error('badClaim');
+  // Saying how the cards must fall means showing them: the hand stays face up
+  // whatever comes of it, so a refusal is played out against open cards.
+  g.openHands[g.turn] = true;
   g.claim = { by: seat, tricks, agreed: [0, 1, 2].map((s) => controllerOf(g, s) === seat) };
   g.log.push({ k: 'log.claim', p: { player: seat, split: tricks } });
   return waitOnClaim(g, seat);

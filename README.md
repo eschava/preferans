@@ -138,8 +138,11 @@ trial run is promising not to change.
 
 When the last few tricks are decided, the bot says so instead of playing them:
 a popup names the split — "You 1 · West 2 · East 0" — and it is written down
-unplayed if everybody agrees. Refuse and the deal is played out to the last
-card, and nobody asks again. What is claimed is not a good line or a likely
+unplayed if everybody agrees. Claiming costs something, as it does at a real
+table: the hand goes face up and stays there, so a refusal is played out
+against open cards, and nobody asks twice in a deal. It is only offered with
+four or three cards left — two are quicker played than discussed — and never in
+an all-pass deal, where every trick is somebody's loss and the cards are cheap. What is claimed is not a good line or a likely
 one: **every** layout the unseen cards could be in is tried, and in each of them
 every legal line has to end in the same numbers, or there is no claim. That is
 strictly more than the search does for its own play — a value under best play

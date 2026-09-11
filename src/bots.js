@@ -154,14 +154,18 @@ const defenderPartner = (v) => {
   return others.length ? others[0] : null;
 };
 
-// From this many cards down, every layout of the unseen ones can be tried, so a
-// settled ending can be proved rather than guessed at.
-const CLAIM_FROM = 4;
+// Where a claim is worth making at all: from four cards down every layout of
+// the unseen ones can be tried, so the ending can be proved rather than guessed
+// at — and below three there is nothing to save, two cards are quicker played
+// than discussed.
+const CLAIM_FROM = 4, CLAIM_UNTIL = 3;
 
 export function chooseCard(v) {
   // Nothing left to decide: when the last tricks fall the same way whatever
-  // anybody plays, say so and let the table agree instead of clicking it out.
-  if (!v.claim && !v.claimBlocked && v.hands[v.turn] && v.hands[v.turn].length <= CLAIM_FROM) {
+  // anybody plays, say so and let the table agree instead of playing it out.
+  // Not in an all-pass deal — there the cards are cheap and the talk is not.
+  const left = v.hands[v.turn] ? v.hands[v.turn].length : 0;
+  if (!v.claim && !v.claimBlocked && !v.contract.raspas && left <= CLAIM_FROM && left >= CLAIM_UNTIL) {
     const tricks = forcedSplit(v);
     if (tricks) return { type: 'claim', tricks };
   }

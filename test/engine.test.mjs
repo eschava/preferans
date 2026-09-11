@@ -447,8 +447,10 @@ function cardsIn(x, out = new Set()) {
   const found = reach();
   assert.ok(found, 'the bots must find a settled ending in forty deals');
   const { g, a } = found;
-  const left = g.hands[g.turn].length;
+  const claimer = g.turn, left = g.hands[claimer].length;
   assert.equal(a.tricks.reduce((x, y) => x + y, 0), left, 'a claim accounts for every trick left');
+  assert.ok(left >= 3 && left <= 4, `claimed with ${left} cards left: too few to be worth asking`);
+  assert.ok(!g.contract.raspas, 'an all-pass deal is played out, not argued over');
 
   // what the claim promises is what playing it out gives, whatever is played
   const played = JSON.parse(JSON.stringify(g));
@@ -462,9 +464,12 @@ function cardsIn(x, out = new Set()) {
 
   const refused = JSON.parse(JSON.stringify(g));
   applyAction(refused, refused.turn, a);
+  assert.ok(refused.openHands[claimer], 'a claim shows the hand it is claiming with');
   const other = [0, 1, 2].find((s) => !refused.claim.agreed[s]);
   applyAction(refused, other, { type: 'claimDecline' });
   assert.equal(refused.claim, null);
+  assert.ok(refused.openHands[claimer], 'and the hand stays up for the rest of the deal');
+  assert.ok(viewFor(refused, other).hands[claimer], 'where everybody can read it');
   assert.ok(refused.claimBlocked, 'refused once, played out from here on');
   assert.equal(refused.phase, 'play');
   assert.equal(refused.hands[refused.turn].length, left, 'nothing was written down');
