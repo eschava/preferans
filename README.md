@@ -224,6 +224,10 @@ joining one skips the dialog.
   that price is never halved or split. Who writes it is a setting: every whister,
   or only a whister who did not take his half of the duty. A lone whister carries
   it either way.
+- **The first lead** always belongs to the **eldest hand** — the seat left of the
+  dealer — whoever declared. So the declarer leads when the deal was theirs to
+  open, and on a misère of their own they lead **blind**: the defence lays its
+  cards down the moment that first card is on the table, not before.
 - **Open play**: on misère the whisters lay their cards on the table. On a normal
   contract, when one whists and the other passes, this is *whist in the light*:
   **both** defence hands go face up and the whister plays them both (switched off

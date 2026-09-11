@@ -281,7 +281,7 @@ function doBid(g, seat, contract) {
   if (!active.length) {                      // everybody passed -> all-pass deal
     g.contract = { raspas: true };
     g.log.push({ k: 'log.raspas', p: {} });
-    startPlay(g, (g.dealer + 1) % 3);
+    startPlay(g);
     return g;
   }
   if (active.length === 1 && g.highBid) {
@@ -313,7 +313,7 @@ function doDeclare(g, seat, discard, contract) {
   g.contract = contract;
   g.log.push({ k: 'log.declares', p: { player: seat, contract } });
 
-  if (contract.misere) { startPlay(g, (seat + 1) % 3); return g; }   // no whisting on misere
+  if (contract.misere) { startPlay(g); return g; }                    // no whisting on misère
   g.phase = 'whist';
   g.turn = (seat + 1) % 3;
   return g;
@@ -333,17 +333,20 @@ function doWhist(g, seat, whist) {
     scoreDeal(g);
     return g;
   }
-  startPlay(g, (g.declarer + 1) % 3);
+  startPlay(g);
   return g;
 }
 
-function startPlay(g, leader) {
-  // Open play: on misère both whisters lay their cards on the table. On a normal
-  // contract, when one whists and the other passes, it is "whist in the light":
-  // both defence hands go face up and the whister plays them both.
-  if (g.contract.misere || (!g.contract.raspas && g.openOnHalfWhist &&
-      g.whistDecl[defendersOf(g)[0]] !== g.whistDecl[defendersOf(g)[1]]))
-    for (const d of defendersOf(g)) g.openHands[d] = true;
+// The first lead is the eldest hand's — the seat left of the dealer — whatever
+// was declared and whoever declared it. The declarer leads when the deal was
+// theirs to open, and on a misère of their own they play to the first trick
+// before the defence shows its cards (doPlay opens them the moment it is down).
+function startPlay(g) {
+  const leader = (g.dealer + 1) % 3;
+  const [d1, d2] = defendersOf(g);
+  const open = g.contract.misere ? leader !== g.declarer
+    : (!g.contract.raspas && g.openOnHalfWhist && g.whistDecl[d1] !== g.whistDecl[d2]);
+  if (open) for (const d of defendersOf(g)) g.openHands[d] = true;
   g.phase = 'play';
   g.trickLead = leader;
   g.turn = leader;
@@ -367,6 +370,10 @@ function doPlay(g, seat, card) {
   g.hands[seat] = g.hands[seat].filter((c) => c !== card);
   g.playedCards.push(card);
   g.trick.push({ player: seat, card });
+  // A misère opened by the declarer: the defence lays its cards down once that
+  // first card is on the table, not before — the lead is made blind.
+  if (g.contract.misere && g.trickNo === 0 && g.trick.length === 1)
+    for (const d of defendersOf(g)) g.openHands[d] = true;
   if (g.trick.length < 3) { g.turn = (seat + 1) % 3; return g; }
 
   const forced = forcedSuit(g);

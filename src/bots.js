@@ -1,5 +1,5 @@
 // Bot policies. They only ever see viewFor(seat) — no peeking at other hands.
-import { SUITS, rankIdx, suitOf, trumpOf, contractRank, allContracts, mustWhist, WHIST_DUTY } from './engine.js';
+import { SUITS, rankIdx, suitOf, trumpOf, contractRank, allContracts, mustWhist, trickWinner, WHIST_DUTY } from './engine.js';
 import { bestCard, declarerTricks, forcedSplit } from './solver.js';
 
 const bySuit = (hand, s) => hand.filter((c) => suitOf(c) === s);
@@ -160,7 +160,21 @@ const defenderPartner = (v) => {
 // than discussed.
 const CLAIM_FROM = 4, CLAIM_UNTIL = 3;
 
-export function chooseCard(v) {
+// Misère: the declarer's tricks are the whole score, so one handed to them for
+// certain beats any number the search thinks it can win later. Playing last,
+// with the declarer's card winning and a card of my own that loses to it, I
+// duck and let them have it. Sampling is at its worst here — the declarer's
+// discard is unseen, so in most imagined worlds they still hold the cards they
+// threw away, and taking the trick looks like it buys something.
+function misereDuck(v, opts) {
+  if (!v.contract.misere || v.playFor === v.declarer || v.trick.length !== 2) return null;
+  if (trickWinner(v.trick, null, null) !== v.declarer) return null;     // misère is no-trump
+  const under = v.legal.filter((c) =>
+    trickWinner([...v.trick, { player: v.playFor, card: c }], null, null) !== v.playFor);
+  return under.length ? bestCard({ ...v, legal: under }, opts) : null;
+}
+
+export function chooseCard(v, opts = {}) {
   // Nothing left to decide: when the last tricks fall the same way whatever
   // anybody plays, say so and let the table agree instead of playing it out.
   // Not in an all-pass deal — there the cards are cheap and the talk is not.
@@ -169,7 +183,9 @@ export function chooseCard(v) {
     const tricks = forcedSplit(v);
     if (tricks) return { type: 'claim', tricks };
   }
-  return { type: 'play', card: bestCard(v) };
+  const duck = misereDuck(v, opts);
+  if (duck) return { type: 'play', card: duck };
+  return { type: 'play', card: bestCard(v, opts) };   // opts fixes the sample count for measurement
 }
 
 // Everything nobody can be holding any more: played, in my hand, or face up on
