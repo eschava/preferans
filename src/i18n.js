@@ -31,6 +31,7 @@ const uk = {
   'seat.open': 'у відкриту',
   'seat.youPlayIt': 'ходите за нього',
   'seat.dealt': 'роздача',
+  'seat.played': 'з прикупом',
 
   'table.talon': 'Прикуп:',
   'table.discard': 'Знос:',
@@ -220,6 +221,7 @@ const en = {
   'seat.open': 'face up',
   'seat.youPlayIt': 'you play this hand',
   'seat.dealt': 'as dealt',
+  'seat.played': 'with the talon',
 
   'table.talon': 'Talon:',
   'table.discard': 'Discard:',

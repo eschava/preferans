@@ -1,4 +1,4 @@
-import { suitOf, contractRank, allContracts, trumpOf, mustWhist, WHIST_DUTY, replayGame } from './engine.js';
+import { suitOf, sortHand, contractRank, allContracts, trumpOf, mustWhist, WHIST_DUTY, replayGame } from './engine.js';
 import { contractName, playerName, suitSym, entryText } from './format.js';
 import { t, setLang, getLang, LANGS, LANG_NAMES, LANG_FLAGS } from './i18n.js';
 import { LocalTable, RemoteTable, createRoom } from './transport.js';
@@ -93,11 +93,12 @@ function renderSeat(seat) {
   if (!mine) {
     el.innerHTML = `<div class="name">${playerName(view, seat)}${bot}${waitingOn}</div>${stake}` +
       (showTricks ? `<div class="tag">${t('seat.tricks', { n: view.tricks[seat] })}</div>` : '');
-    const shown = dealt() ? dealt()[seat] : view.hands[seat];
+    const shown = shownHand(seat);
     if (shown) {                                   // cards face up on the table
       const mine = view.playFor === seat;
       el.insertAdjacentHTML('beforeend',
-        `<div class="open-label">${t(dealt() ? 'seat.dealt'
+        `<div class="open-label">${t(playedItsOwn(seat) ? 'seat.played'
+          : dealt() ? 'seat.dealt'
           : mine ? 'seat.youPlayIt' : 'seat.open')}</div>`);
       const open = document.createElement('div');
       open.className = 'opencards';
@@ -142,7 +143,7 @@ function renderSeat(seat) {
   box.className = 'cards';
   const canPlay = view.playFor === seat;
   let prevSuit = null;
-  for (const c of (dealt() ? dealt()[seat] : view.hands[seat])) {
+  for (const c of shownHand(seat)) {
     if (prevSuit && suitOf(c) !== prevSuit) box.append(suitGap());
     prevSuit = suitOf(c);
     if (view.phase === 'talon' && view.turn === seat) {
@@ -386,6 +387,18 @@ const canClaim = () => view.phase === 'play' && !!view.claim && view.actor === v
   && !view.claim.agreed[view.you];
 // The hands as dealt, but only once the pause after the last trick is over.
 const dealt = () => (view.dealt && revealedFor === view.deal ? view.dealt : null);
+
+// What to lay face up for a seat at the end of a deal. Everyone shows the hand
+// they were dealt — except whoever played the contract, who shows the hand they
+// actually held: the talon in, the discard out. Their two thrown cards are on
+// the table anyway, next to the talon.
+function shownHand(seat) {
+  const d = dealt();
+  if (!d) return view.hands[seat];
+  if (seat !== view.declarer || !view.talon) return d[seat];
+  return sortHand(d[seat].concat(view.talon).filter((c) => !view.discard.includes(c)));
+}
+const playedItsOwn = (seat) => !!dealt() && seat === view.declarer && !!view.talon;
 
 const canBid = () => view.phase === 'bidding' && view.turn === view.you;
 const canWhist = () => view.phase === 'whist' && view.turn === view.you;
