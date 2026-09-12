@@ -102,7 +102,7 @@ misère is reached with the ‹ button and confirmed in a dialog, as is starting
 new game mid-match. Once you have bid a game on tricks, misère leaves the strip.
 
 The score sheet is hidden by default: a menu item opens it, and it pops up by
-itself a second and a half after a deal ends, so the last trick can be seen
+itself three and a half seconds after a deal ends, so the last trick can be seen
 first. The drawing is the classic one — a vertical from the top down to the
 box holding the pool target, two rays from the box down to the base of a
 trapezoid giving three sectors; narrow columns hug the side sectors, and beyond

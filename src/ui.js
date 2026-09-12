@@ -14,6 +14,7 @@ let bidDismissed = null;     // state key the user closed the popup on, so it st
 let pulkaShownFor = 0;       // deal whose result has already been popped up
 let pulkaOpenedOn = 0;       // deal the score-sheet popup was opened on
 let askMode = null;          // what the small popup is currently asking
+const SHEET_DELAY = 3500;    // pause before the score sheet covers the finished deal
 let mainTable = null;        // the real game, parked while a replay is on screen
 let mainView = null;
 
@@ -473,10 +474,10 @@ function render(v) {
   if (pulkadlg.open && v.deal !== pulkaOpenedOn) pulkadlg.close();   // new deal, drop the sheet
   else if (pulkadlg.open) openPulka();
   else if ((v.phase === 'deal_end' || v.phase === 'game_over') && !v.replay && pulkaShownFor !== v.deal) {
-    pulkaShownFor = v.deal;                                          // let the last trick be seen first
+    pulkaShownFor = v.deal;                    // long enough to read the last trick and the hands
     setTimeout(() => {
       if (view.phase === 'deal_end' || view.phase === 'game_over') openPulka();
-    }, 1500);
+    }, SHEET_DELAY);
   }
 }
 
