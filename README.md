@@ -135,7 +135,8 @@ A deal that is over can be played again: **Replay** on the score sheet deals the
 same cards to the same seats, with the same hand dealing, and lets the whole
 thing be played differently — a trial run, on a sheet nobody keeps. It says so
 in three places: the button asks first, in as many words; a note stands in the
-header where the deal number was; and a way back sits on the action bar. The real game waits behind it
+header where the deal number was; and the way back sits beside that note, so the
+action bar below goes on saying only what the deal itself is asking for. The real game waits behind it
 untouched, an online one still streaming, and comes back score and all; the
 sheet on screen stays the real one throughout, because that is the thing the
 trial run is promising not to change.

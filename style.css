@@ -58,11 +58,13 @@ header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .lang.on { border-color: var(--accent); }
 header h1 { font-size: 20px; margin: 0; letter-spacing: .04em; }
 #status { flex: 1; opacity: .85; }
-#roomcode {
+#roomcode, #replayback {
   font: 600 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em;
   padding: 7px 10px; border-radius: 8px; border: 1px solid #ffffff33;
   background: #ffffff14; color: var(--paper); cursor: pointer;
 }
+/* the way out of a trial run belongs next to the word that says you are in one */
+#replayback { font-family: inherit; letter-spacing: normal; border-color: #f5c04266; color: #f5c042; }
 #roomcode:hover { background: #ffffff22; }
 .setrow input.name {
   flex: 1; min-width: 0; padding: 7px 9px; border-radius: 8px; border: 1px solid #ffffff33;

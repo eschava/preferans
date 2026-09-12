@@ -388,8 +388,6 @@ function renderActions() {
   const hint = (t) => box.insertAdjacentHTML('beforeend', `<div class="hint">${t}</div>`);
   const row = () => { const r = document.createElement('div'); r.className = 'row'; box.append(r); return r; };
 
-  if (view.replay && view.phase !== 'deal_end') row().append(btn(t('btn.backToGame'), endReplay));
-
   // an online table waits for its host to start; until then nobody acts
   if (view.started === false) {
     const host = view.hostSeat === view.you;
@@ -407,9 +405,7 @@ function renderActions() {
     const tricks = view.players.map((_, i) => `${playerName(view, i)} ${view.tricks[i]}`).join(' · ');
     if (view.replay) {
       hint(t('hint.replayOver', { tricks }));
-      const r = row();
-      r.append(btn(t('btn.replayAgain'), startReplay));
-      r.append(btn(t('btn.backToGame'), endReplay, 'primary'));
+      row().append(btn(t('btn.replayAgain'), startReplay, 'primary'));
       return;
     }
     hint(t('hint.dealOver', { tricks }));
@@ -470,6 +466,11 @@ function render(v) {
   $('status').textContent = v.replay ? t('app.replay')
     : t('app.status', { deal: v.deal, target: v.poolTarget });
   $('status').classList.toggle('replay', !!v.replay);
+  // The way back sits with the word "trial run", not in the action bar: down
+  // there it displaced the buttons the deal itself is asking for.
+  const back = $('replayback');
+  back.hidden = !v.replay;
+  back.textContent = t('btn.backToGame');
   $('table').classList.toggle('wide-seats', [0, 1, 2].some((i) => i !== v.you && (dealt() || v.hands[i])));
   // a finished deal puts every hand on the table at once: a narrow screen sizes for it
   $('table').classList.toggle('reveal', !!dealt());
@@ -828,5 +829,6 @@ const boot = () => (ROOM ? startGame() : openSetup('local'));
 
 renderStatic();
 $('newgame').onclick = () => { closeMenu(); newGame(); };
+$('replayback').onclick = endReplay;
 $('showpulka').onclick = () => { closeMenu(); openPulka(); };
 boot();
