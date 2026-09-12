@@ -29,7 +29,7 @@ instead of "Player 2"; the browser remembers it. A seat handed back to a bot
 goes back to its plain label.
 
 Creating opens a game on the server with your rules and gives you a
-five-character code — the address bar
+four-digit code — the address bar
 becomes `?room=CODE`, and the header carries a chip that copies the link when
 clicked. Anyone with the code joins from their own dialog, or just by opening
 the link.

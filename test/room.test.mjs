@@ -32,7 +32,7 @@ for (let i = 0; i < 50; i++) {                       // wait for the port to ans
 
 try {
   const made = await post('/api/room', { poolTarget: 50, stalingrad: true, whistBlame: 'short', name: 'Дід' });
-  assert.match(made.room, /^[A-Z0-9]{5}$/, 'a code you can read out loud');
+  assert.match(made.room, /^\d{4}$/, 'four digits, read out like a door code');
   assert.equal(made.seat, 0, 'whoever opens the table sits down first');
 
   const v0 = await first(`${B}/api/room/${made.room}/stream?token=${made.token}`);

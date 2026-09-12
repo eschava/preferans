@@ -22,11 +22,13 @@ const TYPES = {
 
 const rooms = new Map();
 
-// A code people can read out loud: no letters that look like digits.
-const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+// Four digits, the way a door code is read out over the phone. Ten thousand of
+// them against the handful of tables a server holds, and taken ones are drawn
+// again — but a table only lives as long as its game, so the number will come
+// round to somebody else later.
 const newCode = () => {
   let code;
-  do { code = Array.from({ length: 5 }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join(''); }
+  do { code = String(Math.floor(Math.random() * 10000)).padStart(4, '0'); }
   while (rooms.has(code));
   return code;
 };

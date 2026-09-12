@@ -687,8 +687,9 @@ function drawSetup() {
     row.className = 'setrow';
     row.append(Object.assign(document.createElement('span'), { textContent: t('dlg.setupCode') }));
     const code = document.createElement('input');
-    code.className = 'code'; code.maxLength = 5; code.placeholder = '—————';
-    code.oninput = () => { code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); };
+    code.className = 'code'; code.maxLength = 4; code.placeholder = '————';
+    code.inputMode = 'numeric';                  // a phone offers the number pad for it
+    code.oninput = () => { code.value = code.value.replace(/\D/g, ''); };
     code.onkeydown = (e) => { if (e.key === 'Enter') go(); };
     row.append(code);
     body.append(row);
