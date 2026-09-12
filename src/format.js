@@ -15,10 +15,15 @@ export function contractName(c) {
   return c.level + ' ' + suitSym(c.suit);
 }
 
-// Seat labels are keys for the built-in seats and plain names for real players.
+// A seat is called by the name of whoever sits there, and when nobody has given
+// one — a bot, or a guest who did not type a name — by where it sits, counted
+// from the reader's own chair. So an online table says West and East too,
+// instead of "Player 2", and goes on saying it after a guest leaves.
 export const playerName = (view, seat) => {
   const label = view.players[seat];
-  return label.startsWith('player.') ? t(label) : label;
+  if (label && !label.startsWith('player.')) return label;
+  const spot = (seat - view.you + 3) % 3;                 // 0 here, 1 on the left, 2 on the right
+  return t(spot === 0 ? 'player.you' : spot === 1 ? 'player.west' : 'player.east');
 };
 
 // {k, p} -> text: seat indices, contracts and cards are resolved on the way.

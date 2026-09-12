@@ -13,9 +13,6 @@ const uk = {
   'player.you': 'Ви',
   'player.west': 'Захід',
   'player.east': 'Схід',
-  'player.p1': 'Гравець 1',
-  'player.p2': 'Гравець 2',
-  'player.p3': 'Гравець 3',
 
   'rank.7': '7', 'rank.8': '8', 'rank.9': '9', 'rank.10': '10',
   'rank.J': 'В', 'rank.Q': 'Д', 'rank.K': 'К', 'rank.A': 'Т',
@@ -203,9 +200,6 @@ const en = {
   'player.you': 'You',
   'player.west': 'West',
   'player.east': 'East',
-  'player.p1': 'Player 1',
-  'player.p2': 'Player 2',
-  'player.p3': 'Player 3',
 
   'rank.7': '7', 'rank.8': '8', 'rank.9': '9', 'rank.10': '10',
   'rank.J': 'J', 'rank.Q': 'Q', 'rank.K': 'K', 'rank.A': 'A',

@@ -48,7 +48,7 @@ const rules = (o = {}) => ({
 // until they say so: the table waits while friends read the code and sit down,
 // and whatever seats are still free when they start are played by bots.
 const deal = (opts) => newGame({
-  players: ['player.p1', 'player.p2', 'player.p3'],
+  players: [null, null, null],
   poolTarget: opts.poolTarget, stalingrad: opts.stalingrad, whistBlame: opts.whistBlame,
 });
 
@@ -118,8 +118,10 @@ const readBody = (req) => new Promise((ok, err) => {
 // A seat is held by whoever knows its token — that is what a player's client
 // keeps, and the only thing that says which hand it may read.
 // Seat labels: a person's own name, or the default label a bot plays under.
+// Only what somebody typed; a seat left nameless is named by where it sits, and
+// that is the client's business — it depends on which chair you are reading from.
 function label(r) {
-  r.names.forEach((n, i) => { r.game.players[i] = n || `player.p${i + 1}`; });
+  r.names.forEach((n, i) => { r.game.players[i] = n || null; });
 }
 
 function take(r, seat) {

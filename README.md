@@ -24,9 +24,11 @@ The dialog that opens a game asks one thing first: **against bots**, **create a
 table**, or **join** one with a code. The first two then show the house rules —
 pool target, who carries a whist shortfall, Stalingrad — and the third shows
 only the code field, because at somebody else's table the rules are theirs. Both
-online modes take a name, which is what the rest of the table sees on your seat
-instead of "Player 2"; the browser remembers it. A seat handed back to a bot
-goes back to its plain label.
+online modes take a name, which is what the rest of the table sees on your seat;
+the browser remembers it. A seat nobody has named — a bot's, or a guest who did
+not type one — is called by where it sits, counted from the reader's own chair:
+West and East, the same as playing alone, and it goes back to that when a guest
+leaves. Bots wear a 🤖 in front of the name.
 
 Creating opens a game on the server with your rules and gives you a
 four-digit code — the address bar

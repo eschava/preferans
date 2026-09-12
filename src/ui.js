@@ -83,7 +83,8 @@ function renderSeat(seat) {
     ? (bid ? `<div class="bid">${bid}</div>` : '<div class="tag empty">&nbsp;</div>')
     : `<div class="tag${role ? '' : ' empty'}">${role || '&nbsp;'}</div>`;
 
-  const bot = view.humans && !view.humans[seat] ? ` <small class="bot">${t('seat.bot')}</small>` : '';
+  const bot = view.humans && !view.humans[seat]
+    ? `<span class="bot" title="${t('seat.bot')}">🤖</span> ` : '';
   // Whose move it is, and why the table has gone quiet: a bot's first trick is a
   // full search and takes seconds, so it says so rather than looking stuck.
   const live = !['deal_end', 'game_over'].includes(view.phase);
@@ -91,7 +92,7 @@ function renderSeat(seat) {
     ? ` <small class="think">${t(view.humans && view.humans[seat] ? 'seat.toMove' : 'seat.thinking')}</small>`
     : '';
   if (!mine) {
-    el.innerHTML = `<div class="name">${playerName(view, seat)}${bot}${waitingOn}</div>${stake}` +
+    el.innerHTML = `<div class="name">${bot}${playerName(view, seat)}${waitingOn}</div>${stake}` +
       (showTricks ? `<div class="tag">${t('seat.tricks', { n: view.tricks[seat] })}</div>` : '');
     const shown = shownHand(seat);
     if (shown) {                                   // cards face up on the table
@@ -135,7 +136,7 @@ function renderSeat(seat) {
     return;
   }
 
-  el.insertAdjacentHTML('beforeend', `<div class="name"><span>${playerName(view, seat)}</span>` +
+  el.insertAdjacentHTML('beforeend', `<div class="name"><span>${bot}${playerName(view, seat)}</span>` +
     (bidding ? (lastBidOf(seat) ? `<span class="bid">${lastBidOf(seat)}</span>` : '')
              : `<span class="tag">${roleTag(view, seat)}</span>`) +
     (showTricks ? `<span class="tag">${t('seat.tricks', { n: view.tricks[seat] })}</span>` : '') + `</div>`);
