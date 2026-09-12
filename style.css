@@ -227,6 +227,21 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
 #history .htop { opacity: .8; font-size: 12px; }
 #history .hbot { margin-top: 4px; }
 #history .empty { opacity: .55; text-align: center; }
+/* The end of the game, said plainly: a heading, then the placings, the winner
+   in gold. Without it the final sheet looked like any other deal's. */
+#pulkafinal { margin-bottom: 14px; }
+#pulkafinal h2 { margin: 0 0 10px; font-size: 18px; }
+#pulkafinal .place {
+  display: flex; align-items: baseline; gap: 10px; padding: 5px 10px;
+  border-radius: 8px; font-size: 14px;
+}
+#pulkafinal .place + .place { margin-top: 3px; }
+#pulkafinal .rank { width: 14px; opacity: .5; font-size: 12px; }
+#pulkafinal .who { flex: 1; }
+#pulkafinal .pts { font-variant-numeric: tabular-nums; font-weight: 600; }
+#pulkafinal .won { background: #f5c04222; border: 1px solid #f5c04255; font-weight: 600; }
+#pulkafinal .won .rank { opacity: .9; color: #b98a12; }
+
 #points { margin-bottom: 10px; }
 #points .prow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 #points .pcell {

@@ -128,6 +128,10 @@ the slanting side of the sector, so a long game builds a pyramid. When even that
 is not enough the hand writes smaller. A pool that is closed gets a `>>` after
 its last number.
 
+When the game is over the sheet opens on the result: a heading saying so, and
+the three placings by points, the winner in gold. Without it the end of a game
+looked like the end of any other deal.
+
 Approximate points are not written into the drawing — they sit in a separate
 table above the sheet, in the same order as the seats (left opponent, you,
 right); the change from the last deal stands next to each, green or red. Under

@@ -67,6 +67,7 @@ const uk = {
   'log.dark': '{player}: віст в темну',
   'hint.replayOver': 'Пробу зіграно. Взятки: {tricks}. У пулю це не пішло.',
   'hint.gameOver': 'Гру закінчено.',
+  'final.title': 'Партію завершено',
 
   'btn.bid': 'Заявка…',
   'btn.declare': 'Оголосити гру…',
@@ -260,6 +261,7 @@ const en = {
   'log.dark': '{player}: whist in the dark',
   'hint.replayOver': 'Trial run over. Tricks: {tricks}. Nothing was written down.',
   'hint.gameOver': 'Game over.',
+  'final.title': 'The game is over',
 
   'btn.bid': 'Bid…',
   'btn.declare': 'Declare…',

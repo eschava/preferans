@@ -101,12 +101,19 @@ function renderSeat(seat) {
           : mine ? 'seat.youPlayIt' : 'seat.open')}</div>`);
       const open = document.createElement('div');
       open.className = 'opencards';
+      el.append(open);                             // in the panel first: its width is the real one
+      const room = open.clientWidth || 160;
       for (const row of bySuitRows(shown)) {
         const line = document.createElement('div');
         line.className = 'suitrow';
-        // a long suit is squeezed into an overlap so it stays a single row
+        // A long suit is squeezed into an overlap so it stays a single row, the
+        // way a hand is held. What must fit is the whole row — (n-1) steps and
+        // one full card at the end — so the step comes off the room left after
+        // that last card, not off the room divided by the count.
         const cw = cssPx('--card-open-w', 40);
-        const step = Math.min(cw + 3, Math.max(80, el.clientWidth - 18) / row.length);
+        const step = row.length > 1
+          ? Math.max(12, Math.min(cw + 3, (room - cw) / (row.length - 1)))
+          : cw;
         row.forEach((c, i) => {
           const card = mine
             ? cardEl(c, view.legal.includes(c) ? 'playable' : 'dim',
@@ -117,7 +124,6 @@ function renderSeat(seat) {
         });
         open.append(line);
       }
-      el.append(open);
       return;
     }
     const count = document.createElement('div');
@@ -210,6 +216,19 @@ function openPulka() {
   // screen is always the real game's — that is the whole point of the warning.
   const sv = mainView || view;
   pulkaOpenedOn = view.deal;
+  // The end of a game looked exactly like the end of a deal — the same sheet
+  // popping up — so say it, and say who won by how much before the numbers.
+  const done = sv.phase === 'game_over';
+  const final = $('pulkafinal');
+  final.hidden = !done;
+  if (done) {
+    const places = [0, 1, 2].map((seat) => ({ seat, pts: sv.finals[seat] }))
+      .sort((a, b) => b.pts - a.pts);
+    final.innerHTML = `<h2>${t('final.title')}</h2>` + places.map((p, i) =>
+      `<div class="place${i ? '' : ' won'}"><span class="rank">${i + 1}</span>` +
+      `<span class="who">${playerName(sv, p.seat)}</span>` +
+      `<span class="pts">${p.pts > 0 ? '+' : p.pts < 0 ? '−' : ''}${Math.abs(p.pts).toFixed(1)}</span></div>`).join('');
+  }
   $('points').innerHTML = pointsHTML(sv);
   $('score').innerHTML = scoresheetSVG(sv);
   $('history').innerHTML = historyHTML(sv);
