@@ -94,7 +94,9 @@ create. The UI is the same.
 
 Game decisions — bidding, declaring after the talon, whisting, confirmations —
 are non-modal popups centred on the table: nothing is blurred and the cards in
-your hand stay visible. The bar at the bottom keeps only hints and the buttons
+your hand stay visible. The whist question carries the talon inside it — the two
+cards the declarer picked up are what you are deciding against, and on a phone
+the popup covers the table's own copy of them. The bar at the bottom keeps only hints and the buttons
 that open those popups. Each player's bid is shown in their own zone.
 
 The bids are laid out as a ladder, the way they are written on paper: levels

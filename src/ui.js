@@ -324,12 +324,19 @@ function openLight() {
 
 function openWhist() {
   const forced = mustWhist(view);
+  // The talon comes with the question. It is the thing you are deciding against,
+  // and on a phone the popup covers the table's own copy of it.
+  const talon = (view.talon || []).filter(Boolean);
+  const seen = talon.length
+    ? `<div class="dlgtalon"><span>${t('table.talon')}</span>` +
+      talon.map((c) => `<div class="card">${cardSVG(c)}</div>`).join('') + '</div>'
+    : '';
   ask({
     mode: 'whist',
     title: t('dlg.whistTitle', {
       player: playerName(view, view.declarer), contract: contractName(view.contract),
     }),
-    text: t('dlg.whistText', { duty: WHIST_DUTY[view.contract.level] }) +
+    text: t('dlg.whistText', { duty: WHIST_DUTY[view.contract.level] }) + seen +
       (forced ? `<div class="warn">${t('dlg.whistForced')}</div>` : ''),
     buttons: [
       { label: t('dlg.whistYes'), cls: 'primary', fn: () => table.send({ type: 'whist', whist: true }) },

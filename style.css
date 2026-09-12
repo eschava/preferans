@@ -178,6 +178,9 @@ dialog {
 }
 #askdlg { z-index: 10; max-width: 360px; }
 #asktext { opacity: .85; font-size: 14px; }
+/* the talon, shown with the question it decides */
+.dlgtalon { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; }
+.dlgtalon .card { width: 44px; }
 dialog h2 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
 dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
 .setrow { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
@@ -259,6 +262,18 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
      bid, and a shade off the cards. */
   #table.wide-seats .seat.opp .tag.empty { display: none; }
   :root { --card-open-w: 30px; }        /* the layout code reads this off :root */
+  /* A question about the deal sat over the middle of the table, which on a phone
+     is exactly where the talon lies — so the bid you are answering hid the cards
+     it was about. Down to the foot of the table with it, and tighter, so the
+     talon and the trick stay in sight while you answer. */
+  #askdlg {
+    top: auto; bottom: 0; transform: translateX(-50%);
+    max-width: min(320px, 100%); padding: 12px;
+  }
+  #askdlg h2 { font-size: 15px; margin-bottom: 8px; }
+  #asktext { font-size: 13px; line-height: 1.35; }
+  #askdlg .row { margin-top: 10px; }
+
   /* The table holds its size for the whole deal. Otherwise every card played
      shrinks it and drags the status bar up the screen, which on a phone is the
      one thing that should stay put. A screenful, and never less than a full
