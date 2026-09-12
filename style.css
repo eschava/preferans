@@ -204,8 +204,8 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
   gap: 5px; align-items: stretch;
 }
 .ladder .lvl {
-  align-self: center; text-align: right; padding-right: 2px;
-  font-size: 13px; opacity: .5; font-variant-numeric: tabular-nums;
+  align-self: center; text-align: right; padding-right: 4px;
+  font-size: 17px; font-weight: 600; opacity: .9; font-variant-numeric: tabular-nums;
 }
 .ladder .chip { padding: 11px 4px; font-size: 18px; font-weight: 600; line-height: 1; }
 .ladder .chip.d, .ladder .chip.h { color: #b3261e; }
