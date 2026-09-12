@@ -324,7 +324,11 @@ heuristic it wins 33 matches out of 48 over four seeds, about +70 points a match
 
 The contract is not guessed either: at the talon the bot counts what the hand
 takes with the **same double-dummy search**, over sampled opponent hands, and
-declares that. One linear fit over every hand shape flattens the ends of the
+declares that — rounded **down**, because a hand worth six and a half takes seven
+about half the time, and the two outcomes do not weigh the same: a game made
+fills the pool, a game one short writes its value into the mountain, which the
+settlement counts ten times over. Over three sets of sixty deals, rounding down
+made 98 contracts against 77 for rounding to the nearest, on the same pool. One linear fit over every hand shape flattens the ends of the
 range, and that is how a hand that went on to take nine came to be declared at
 seven. The auction itself is still that heuristic, fitted against real play
 (`scripts/calibrate.mjs`, and `scripts/calibrate-dd.mjs` checks the count against

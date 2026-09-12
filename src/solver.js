@@ -399,7 +399,10 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
     if (!samples && s > 0 && Date.now() - started > CEILING_MS) break;   // never mind the plan
     if (!samples && s === 1) {
       const spent = Math.max(1, Date.now() - started);
-      planned = Math.min(24, Math.max(MIN_SAMPLES, Math.floor(budgetMs / spent)));
+      // A caller asking for a budget this small is a harness wanting the fastest
+      // legal play, not a table: give it what it asked for and skip the floor.
+      const floor = budgetMs >= 100 ? MIN_SAMPLES : 1;
+      planned = Math.min(24, Math.max(floor, Math.floor(budgetMs / spent)));
       if (planned * spent > CEILING_MS) planned = Math.max(1, Math.floor(CEILING_MS / spent));
     }
     const hands = dealHidden(v, pool.slice());

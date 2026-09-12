@@ -105,8 +105,16 @@ export function chooseDeclare(v) {
   // face value it costs 0.10 undertricks a deal on hands worth seven or more
   // and saves 0.9 of a trick the old fit threw away. The heuristic level stays
   // as the floor: the auction already fixed that.
+  // Round DOWN, not to the nearest: a hand worth six and a half takes seven
+  // about half the time, and the two outcomes are not worth the same. Making it
+  // fills the pool by the game's value; falling one short writes that value into
+  // the mountain, which the settlement counts ten times over. Measured on three
+  // sets of sixty deals against the true double dummy of each: rounding down
+  // made 98 contracts and went short 46, against 77 and 67 for rounding to the
+  // nearest, for the same pool — the mountain halved, and the settlement went
+  // from -2592 to -1130.
   const dd = declarerTricks(best.kept, best.trump, { samples: 8, declarer: v.you });
-  const level = Math.max(best.contract.level, Math.min(10, Math.max(6, Math.round(dd))));
+  const level = Math.max(best.contract.level, Math.min(10, Math.max(6, Math.floor(dd))));
   return { type: 'declare', discard: best.discard, contract: { level, suit: best.contract.suit } };
 }
 
@@ -124,8 +132,10 @@ function pickDiscard(hand, trump) {
 }
 
 // Defence takes far less than estimateTricks promises: a separate fit over
-// played deals (scripts/calibrate-defence.mjs) gives actual ≈ 0.47*raw.
-export const expectedDefence = (hand, trump) => 0.47 * estimateTricks(hand, trump) + 0.1;
+// played deals (scripts/calibrate-defence.mjs) gives actual ≈ 0.53*raw. Re-run
+// it after changing the card play, as with the declarer's fit — this one moved
+// from 0.47 once the play got stronger.
+export const expectedDefence = (hand, trump) => 0.526 * estimateTricks(hand, trump) - 0.02;
 
 // Whist when the pair can carry its duty: a shortfall goes into the whisters'
 // mountain, and if the partner passes you carry the whole of it alone.
