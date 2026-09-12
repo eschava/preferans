@@ -307,6 +307,14 @@ second takes its sixteen (~1.3 s), and the rest is nearly free. In the
 local game that search runs in a Web Worker, so the first trick no longer freezes
 the page while it thinks; online the server does the thinking anyway.
 
+Where several cards come out equal, the **smallest of its suit** wins the tie:
+to the rest of the deal it is the same card, but a bot that throws a king where
+a seven would do looks like it has blundered. Over 40 deals a third hand that
+cannot win the trick and has a choice now plays its lowest 81 times out of 82,
+against 18 out of 52 before; the one exception is worth nothing either way
+double dummy. Not on misère or an all-pass deal, where a high card is a
+liability rather than an asset.
+
 The search is cross-checked against an independent brute-force minimax
 (`test/solver.test.mjs`): 240 positions agree on the value and 54 on the card
 chosen, from all three positions in a trick. Head to head against the previous

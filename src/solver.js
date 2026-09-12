@@ -433,10 +433,19 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
       totals.set(card, totals.get(card) + value);
     }
   }
+  // Ties go to the smallest card of the suit. The search rates them the same —
+  // often they are the same card as far as the rest of the deal is concerned —
+  // but a bot that throws a king where a seven would do looks like it has
+  // blundered, and keeping the big one costs nothing the search can see. Not on
+  // misère or an all-pass deal, where a high card is a liability, not an asset.
+  const keepLow = !v.contract.misere && !v.contract.raspas;
   let bestCard = legal[0], bestVal = maximizing ? -Infinity : Infinity;
   for (const c of legal) {
     const val = totals.get(c);
-    if (maximizing ? val > bestVal : val < bestVal) { bestVal = val; bestCard = c; }
+    const better = maximizing ? val > bestVal : val < bestVal;
+    const sameButSmaller = keepLow && val === bestVal
+      && suitOf(c) === suitOf(bestCard) && rankIdx(c) < rankIdx(bestCard);
+    if (better || sameButSmaller) { bestVal = val; bestCard = c; }
   }
   return bestCard;
 }
