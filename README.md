@@ -182,8 +182,11 @@ plays with their hand face up, their column widens and the cards are laid out
 by suit, one suit per row (a long suit is squeezed into an overlap); if you are
 playing for two, the legal cards in their hand are highlighted.
 
-At the end of a deal the table is revealed: every hand as it was dealt, and in
-the centre the talon and the declarer's discard.
+At the end of a deal the table is revealed: every hand as it was dealt — except
+the declarer's, which is the hand they actually played, the talon in and the
+discard out (their panel says "with the talon"). The talon and the discard lie
+in the centre beside it, so both what they took and what they threw are there to
+read.
 
 ## Languages
 
