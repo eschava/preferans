@@ -254,8 +254,9 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
   #table, #table.wide-seats {
     grid-template-areas: "s1 s2" "center center" "me me"; grid-template-columns: 1fr 1fr;
     /* the 210px floor is for the desktop layout, where the seats flank the
-       centre; stacked on a phone they only need their own height */
-    grid-template-rows: auto auto auto;
+       centre; stacked on a phone they only need their own height. The middle
+       row takes the slack, which is what keeps the table's height still. */
+    grid-template-rows: auto 1fr auto;
   }
   /* Face-up hands are the tallest thing on the page, so on a phone the seat
      panels drop what they do not need: the placeholder that reserves room for a
@@ -274,17 +275,15 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
   #asktext { font-size: 13px; line-height: 1.35; }
   #askdlg .row { margin-top: 10px; }
 
-  /* The table holds its size for the whole deal. Otherwise every card played
-     shrinks it and drags the status bar up the screen, which on a phone is the
-     one thing that should stay put. A screenful, and never less than a full
-     hand needs — the card size decides that, not the viewport. */
-  #table { min-height: max(calc(100dvh - 170px), calc(var(--card-w) * 12.5)); }
-  /* Same reasoning inside a hand played face up: keep room for its four suit
-     rows, so a misère does not fold up as it is played out. */
-  .opencards { min-height: calc(var(--card-open-w) * 5.9); }
-  /* And in your own hand, which is what really moves: ten cards wrap to three
-     rows on a phone and one card to a single row. Keep the three. */
-  .seat.me .cards { min-height: calc(var(--card-w) * 4.2 + 12px); }
+  /* The table holds its size for the whole deal, so that playing a card does not
+     drag the status bar up the screen. One floor, never taller than a screenful
+     — reserving space inside the seats as well only stacked up and pushed the
+     hand off the bottom — and the middle row soaks up whatever the hand and the
+     open cards give back as they empty. */
+  #table { min-height: min(calc(100dvh - 170px), calc(var(--card-w) * 12.5)); }
+  /* Your own cards stay on screen even when the table is taller than one — with
+     both defence hands face up it genuinely is. */
+  #seat0 { position: sticky; bottom: 6px; z-index: 6; }
 
   /* A finished deal shows everything at once — three hands as dealt, the talon,
      the discard, the last trick — so on a phone the cards step down a size and
