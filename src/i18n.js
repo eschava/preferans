@@ -77,7 +77,6 @@ const uk = {
   'dlg.bidding': 'Торгівля. Поточна заявка: <b>{bid}</b>',
   'dlg.repeatHint': ' · можна повторити ↺',
   'dlg.repeatTitle': 'Повторити заявку через пасуючого',
-  'nav.prev': 'назад', 'nav.next': 'далі',
   'dlg.declare': 'Оголосіть гру',
   'dlg.misereAsk': 'Мізер?',
   'dlg.misereWarn': 'Кабальна заявка: назад дороги немає — вигравши торгівлю, мізер доведеться грати. ' +
@@ -264,7 +263,6 @@ const en = {
   'dlg.bidding': 'Bidding. Current bid: <b>{bid}</b>',
   'dlg.repeatHint': ' · repeat available ↺',
   'dlg.repeatTitle': 'Repeat the bid across the passer',
-  'nav.prev': 'back', 'nav.next': 'forward',
   'dlg.declare': 'Declare the contract',
   'dlg.misereAsk': 'Misère?',
   'dlg.misereWarn': 'A binding bid: there is no way back — win the auction and you must play it. ' +

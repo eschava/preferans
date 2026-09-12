@@ -187,20 +187,27 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
 .setrow input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
 .warn { margin-top: 8px; color: var(--accent); }
 
-.scroller { display: flex; align-items: center; gap: 6px; }
-.scroller .nav { padding: 0 10px; font-size: 22px; line-height: 34px; }
-.strip {
-  display: flex; gap: 6px; overflow-x: auto;
-  scroll-snap-type: x mandatory; padding: 4px 2px; max-width: 400px;
-  scrollbar-width: thin;
+/* The bidding ladder: levels down the side, suits across, misère on the rung it
+   outranks. Nothing scrolls and nothing moves between rounds — a bid is always
+   in the same place, whether it can be named this round or not. */
+.ladder {
+  display: grid; grid-template-columns: auto repeat(5, minmax(46px, 1fr));
+  gap: 5px; align-items: stretch;
 }
-.strip .chip {
-  flex: none; scroll-snap-align: start; min-width: 62px; padding: 12px 6px;
-  font-size: 16px; font-weight: 600;
+.ladder .lvl {
+  align-self: center; text-align: right; padding-right: 2px;
+  font-size: 13px; opacity: .5; font-variant-numeric: tabular-nums;
 }
-.strip .chip.first { box-shadow: 0 0 0 2px var(--accent); }
-.strip .chip.wide { min-width: 84px; }
-.strip .chip.repeat { box-shadow: 0 0 0 2px #57b087; }
+.ladder .chip { padding: 11px 4px; font-size: 18px; font-weight: 600; line-height: 1; }
+.ladder .chip.d, .ladder .chip.h { color: #b3261e; }
+.ladder .chip.nt { font-size: 14px; }
+.ladder .misere {
+  grid-column: 1 / -1; padding: 7px; font-size: 13.5px; letter-spacing: .06em;
+  background: #efe8d4; border-color: #cbbf9d;      /* not a suit and not a level: its own rung */
+}
+.ladder .chip:not(:disabled):hover { border-color: var(--accent); background: #fff; }
+.ladder .chip.first { box-shadow: 0 0 0 2px var(--accent); }
+.ladder .chip.repeat { box-shadow: 0 0 0 2px #57b087; }
 
 #pulkadlg { width: 560px; max-height: 92vh; overflow: auto; }
 #score svg { display: block; width: 100%; height: auto; border-radius: 8px 8px 0 0; }
@@ -250,6 +257,5 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
      the discard, the last trick — so on a phone the cards step down a size and
      the whole deal lands on one screen instead of trailing off the bottom. */
   #table.reveal { --card-w: 46px; }
-  .strip { max-width: 60vw; }
   #pulkadlg { width: auto; }
 }

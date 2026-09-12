@@ -248,43 +248,53 @@ const confirmAsk = (title, text, onYes, yes) =>
   ask({ mode: 'confirm', title, text, buttons: [
     { label: yes, cls: 'primary', fn: onYes }, { label: t('btn.cancel') }] });
 
+// The bidding ladder the way it is written on paper: levels down the side,
+// suits across, and misère on its own rung between 8NT and 9♠ — which is
+// exactly where it outranks them. Everything stays on screen, greyed when it is
+// too cheap to name, so the ladder never rearranges itself between rounds and
+// the bid you want is always in the same place.
 function openBidDialog(mode, { title, minRank, onPick, extra, repeat }) {
   bidMode = mode;
   $('bidtitle').innerHTML = title;
-  const strip = $('bidstrip');
-  strip.innerHTML = '';
-  const list = allContracts().filter((c) =>
-    contractRank(c) >= minRank && (!c.misere || mode !== 'bid' || view.canBidMisere));
-  let firstGame = null;
-  for (const c of [...list.filter((x) => x.misere), ...list.filter((x) => !x.misere)]) {
+  const grid = $('bidstrip');
+  grid.innerHTML = '';
+  const suits = allContracts().filter((c) => c.level === 6).map((c) => c.suit);
+
+  const chip = (c, label, cls) => {
     const isRepeat = repeat && contractRank(c) === contractRank(repeat);
     const pick = () => { bidMode = null; biddlg.close(); onPick(c); };
-    const b = btn(contractName(c) + (isRepeat ? ' ↺' : ''),
+    const b = btn(label + (isRepeat ? ' ↺' : ''),
       c.misere ? () => confirmAsk(t('dlg.misereAsk'), t('dlg.misereWarn'), pick, t('dlg.misereYes'))
                : pick,
-      'chip' + (c.misere || isRepeat ? ' wide' : '') + (isRepeat ? ' repeat' : ''));
+      `chip ${cls}${isRepeat ? ' repeat' : ''}`);
+    b.disabled = contractRank(c) < minRank
+      || (!!c.misere && mode === 'bid' && !view.canBidMisere);   // misère is a first call only
     if (isRepeat) b.title = t('dlg.repeatTitle');
-    strip.append(b);
-    if (!c.misere && !firstGame) firstGame = b;
+    return b;
+  };
+
+  let cheapest = null;
+  for (const level of [6, 7, 8, 9, 10]) {
+    if (level === 9) grid.append(chip({ misere: true }, contractName({ misere: true }), 'misere'));
+    const rung = document.createElement('span');
+    rung.className = 'lvl';
+    rung.textContent = level;
+    grid.append(rung);
+    for (const suit of suits) {
+      const b = chip({ level, suit }, suitSym(suit), suit);
+      grid.append(b);
+      if (!b.disabled && !cheapest) cheapest = b;
+    }
   }
-  firstGame?.classList.add('first');
+  cheapest?.classList.add('first');
+
   const acts = $('bidactions');
   acts.innerHTML = '';
   if (extra) acts.append(extra);
   acts.append(btn(t('btn.close'), dismissBid));
   if (!biddlg.open) biddlg.show();     // non-modal, so the table stays visible
-  // focus on six of spades; misère stays off the left edge, reachable with ‹
-  if (firstGame) requestAnimationFrame(() =>
-    strip.scrollTo({ left: firstGame.offsetLeft - strip.offsetLeft, behavior: 'instant' }));
 }
 
-// smooth scrolling is swallowed by scroll-snap here, so step instantly
-const scrollStrip = (dir) => {
-  const strip = $('bidstrip');
-  strip.scrollTo({ left: strip.scrollLeft + dir * 200, behavior: 'instant' });
-};
-$('bidprev').onclick = () => scrollStrip(-1);
-$('bidnext').onclick = () => scrollStrip(1);
 // Auto-open once per decision point; reopening is on the bid button.
 // Dismissal is recorded on the explicit close/Esc, never in the 'close' event —
 // that one fires asynchronously, by which time the state may have moved on.
@@ -506,8 +516,6 @@ function renderStatic() {
   $('newgame').textContent = t('app.newGame');
   $('langs').innerHTML = langButtons();
   showCode();
-  $('bidprev').setAttribute('aria-label', t('nav.prev'));
-  $('bidnext').setAttribute('aria-label', t('nav.next'));
 }
 
 // The flags live in the menu and, because that dialog is modal and covers it,

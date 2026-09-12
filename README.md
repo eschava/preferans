@@ -97,9 +97,13 @@ are non-modal popups centred on the table: nothing is blurred and the cards in
 your hand stay visible. The bar at the bottom keeps only hints and the buttons
 that open those popups. Each player's bid is shown in their own zone.
 
-In the bidding strip misère comes first, but the focus starts on six of spades:
-misère is reached with the ‹ button and confirmed in a dialog, as is starting a
-new game mid-match. Once you have bid a game on tricks, misère leaves the strip.
+The bids are laid out as a ladder, the way they are written on paper: levels
+down the side, suits across, and misère on its own rung between 8NT and 9♠ —
+exactly where it outranks them. Nothing scrolls and nothing rearranges itself
+between rounds: a bid is always in the same place and simply greys out when it
+can no longer be named. The cheapest one still available is ringed, a repeat is
+marked ↺, and misère asks for confirmation, as starting a new game mid-match
+does.
 
 The score sheet is hidden by default: a menu item opens it, and it pops up by
 itself three and a half seconds after a deal ends, so the last trick can be seen
