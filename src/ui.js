@@ -308,6 +308,20 @@ const dismissBid = () => { bidDismissed = bidKey(); bidMode = null; biddlg.close
 biddlg.addEventListener('cancel', () => { bidDismissed = bidKey(); });
 biddlg.addEventListener('close', () => { bidMode = null; render(view); });
 
+// Whisting alone: play it face up, seeing the partner's hand and moving for it,
+// or in the dark, with nobody reading anything.
+function openLight() {
+  ask({
+    mode: 'light',
+    title: t('dlg.lightTitle'),
+    text: t('dlg.lightText'),
+    buttons: [
+      { label: t('dlg.lightYes'), cls: 'primary', fn: () => table.send({ type: 'light', open: true }) },
+      { label: t('dlg.lightNo'), fn: () => table.send({ type: 'light', open: false }) },
+    ],
+  });
+}
+
 function openWhist() {
   const forced = mustWhist(view);
   ask({
@@ -349,6 +363,7 @@ const dealt = () => (view.dealt && revealedFor === view.deal ? view.dealt : null
 
 const canBid = () => view.phase === 'bidding' && view.turn === view.you;
 const canWhist = () => view.phase === 'whist' && view.turn === view.you;
+const canLight = () => view.phase === 'light' && view.turn === view.you;
 const canDeclare = () => view.phase === 'talon' && view.turn === view.you && discardSel.length === 2;
 
 function openBid() {
@@ -435,6 +450,11 @@ function renderActions() {
     return;
   }
 
+  if (view.phase === 'light') {
+    hint(t('hint.light'));
+    row().append(btn(t('dlg.lightTitle'), openLight, 'primary'));
+    return;
+  }
   if (view.phase === 'whist') {
     hint(t('hint.whist', {
       player: playerName(view, view.declarer), contract: contractName(view.contract),
@@ -487,6 +507,8 @@ function render(v) {
   if (!bidMode && canDeclare()) openDeclare();
   if (askMode === 'whist' && !canWhist()) { askMode = null; askdlg.close(); }
   if (!askMode && canWhist()) openWhist();
+  if (askMode === 'light' && !canLight()) { askMode = null; askdlg.close(); }
+  if (!askMode && canLight()) openLight();
   if (askMode === 'claim' && !canClaim()) { askMode = null; askdlg.close(); }
   if (!askMode && canClaim()) openClaim();
 

@@ -266,7 +266,8 @@ function cardsIn(x, out = new Set()) {
   assert.ok(g.log.some((l) => l.k === 'score.whistShort'));
 }
 
-// light whist: the whister plays the passing partner's hand too
+// light whist: the whister chooses, and having chosen the light plays the
+// passing partner's hand too
 {
   setRandom(seeded(31));
   const g = newGame();
@@ -274,6 +275,20 @@ function cardsIn(x, out = new Set()) {
   g.phase = 'whist'; g.turn = 1;
   applyAction(g, 1, { type: 'whist', whist: true });     // west whists
   applyAction(g, 2, { type: 'whist', whist: false });    // east passes
+  assert.equal(g.phase, 'light', 'the lone whister is asked first');
+  assert.equal(g.turn, 1, 'and it is their call, not the passer\'s');
+  assert.deepEqual(g.openHands, [false, false, false], 'nothing is shown until they say so');
+  assert.throws(() => applyAction(g, 2, { type: 'light', open: true }), /notYourTurn/);
+
+  const dark = JSON.parse(JSON.stringify(g));            // the other answer: nobody sees anything
+  applyAction(dark, 1, { type: 'light', open: false });
+  assert.equal(dark.phase, 'play');
+  assert.deepEqual(dark.openHands, [false, false, false]);
+  assert.equal(controllerOf(dark, 2), 2, 'in the dark each hand is played by its owner');
+  assert.equal(viewFor(dark, 1).hands[2], null, 'and the whister does not see the partner');
+  assert.equal(viewFor(dark, 0).hands.filter(Boolean).length, 1, 'nor does the declarer');
+
+  applyAction(g, 1, { type: 'light', open: true });
   assert.equal(g.phase, 'play');
   assert.deepEqual(g.openHands, [false, true, true]);    // in a light whist both go face up
   assert.equal(controllerOf(g, 2), 1);                   // and the whister moves for both

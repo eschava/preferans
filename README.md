@@ -239,10 +239,12 @@ joining one skips the dialog.
   open, and on a misère of their own they lead **blind**: the defence lays its
   cards down the moment that first card is on the table, not before.
 - **Open play**: on misère the whisters lay their cards on the table. On a normal
-  contract, when one whists and the other passes, this is *whist in the light*:
-  **both** defence hands go face up and the whister plays them both (switched off
-  with the `openOnHalfWhist` option). So the declarer sees the whole defence, and
-  the defence sees itself. There is no "in the dark" variant.
+  contract, when one whists and the other passes, the lone whister is **asked**
+  which way to play it: *in the light*, where both defence hands go face up and
+  the whister plays them both — seeing the partner's cards, at the price of the
+  declarer seeing them too — or *in the dark*, where everyone plays their own and
+  nothing is shown. The question itself can be switched off with the
+  `openOnHalfWhist` option, which then means every half whist is played dark.
 - Scoring (Sochi): a game of 6…10 is worth 2…10 into the pool, a shortfall the
   same per trick into the mountain; misère is 10, and every trick taken on
   misère is 10 into the mountain; an all-pass deal is 2 into the mountain per

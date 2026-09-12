@@ -183,6 +183,10 @@ export function botAction(v) {
     case 'bidding': return chooseBid(v);
     case 'talon': return chooseDeclare(v);
     case 'whist': return chooseWhist(v);
+    // Alone against the declarer, seeing the partner's hand and moving for it is
+    // worth more than the cards it shows the declarer, who reads them either way
+    // once the tricks start falling.
+    case 'light': return { type: 'light', open: true };
     // A claim proved from a seat that sees less than this one is true here too,
     // so there is nothing to check: agree and let the deal be written down.
     case 'play':

@@ -109,6 +109,7 @@ export function startDeal(g, deck) {
   g.trickNo = 0;
   g.result = null;
   g.conceded = false;
+  g.light = false;           // a half whist played face up, the whister moving for both
   g.claim = null;            // an ending somebody says is settled, waiting on the others
   g.claimBlocked = false;    // once refused, the deal is played out to the end
   g.turn = (g.dealer + 1) % 3;
@@ -143,10 +144,8 @@ export function controllerOf(g, seat) {
     const other = seat === d1 ? d2 : d1;
     return (!g.humans[seat] && g.humans[other]) ? other : seat;
   }
-  if (!g.openOnHalfWhist) return seat;
-  if (g.whistDecl[d1] === g.whistDecl[d2]) return seat;
-  const whister = g.whistDecl[d1] ? d1 : d2;
-  return seat === whister ? seat : whister;
+  if (!g.light) return seat;                     // in the dark everyone plays their own
+  return g.whistDecl[d1] ? d1 : d2;
 }
 
 // Misère is a binding bid: it may only be a player's own first call. Anyone
@@ -211,7 +210,7 @@ export function legalCards(g, seat) {
 
 // ---- actions ---------------------------------------------------------------
 // {type:'bid', contract|null} | {type:'declare', discard, contract}
-// {type:'whist', whist:bool} | {type:'play', card} | {type:'next'}
+// {type:'whist', whist:bool} | {type:'light', open:bool} | {type:'play', card} | {type:'next'}
 
 // "Stalingrad": on a six of spades — the cheapest game there is — the defence
 // may not wave the deal through; both must whist.
@@ -229,6 +228,7 @@ export function legalActions(g, seat) {
       return [{ type: 'bid', contract: null }, ...up.map((c) => ({ type: 'bid', contract: c }))];
     }
     case 'talon': return [{ type: 'declare' }];
+    case 'light': return [{ type: 'light', open: true }, { type: 'light', open: false }];
     case 'whist': return mustWhist(g)
       ? [{ type: 'whist', whist: true }]
       : [{ type: 'whist', whist: true }, { type: 'whist', whist: false }];
@@ -252,6 +252,7 @@ export function applyAction(g, seat, a) {
     case 'bid': return doBid(g, seat, a.contract);
     case 'declare': return doDeclare(g, seat, a.discard, a.contract);
     case 'whist': return doWhist(g, seat, a.whist);
+    case 'light': return doLight(g, seat, a.open);
     case 'next':
       if (g.phase !== 'deal_end') throw new Error('dealInProgress');
       startDeal(g);
@@ -333,6 +334,23 @@ function doWhist(g, seat, whist) {
     scoreDeal(g);
     return g;
   }
+  // One whisted and one passed: it is the whister's call whether to play it in
+  // the light — both defence hands face up and theirs to play, the declarer
+  // reading them too — or in the dark, everyone holding their own cards.
+  if (g.openOnHalfWhist && g.whistDecl[d1] !== g.whistDecl[d2]) {
+    g.phase = 'light';
+    g.turn = g.whistDecl[d1] ? d1 : d2;
+    return g;
+  }
+  startPlay(g);
+  return g;
+}
+
+function doLight(g, seat, open) {
+  if (g.phase !== 'light') throw new Error('notLight');
+  g.light = !!open;
+  if (open) for (const d of defendersOf(g)) g.openHands[d] = true;
+  g.log.push({ k: open ? 'log.light' : 'log.dark', p: { player: seat } });
   startPlay(g);
   return g;
 }
@@ -343,10 +361,10 @@ function doWhist(g, seat, whist) {
 // before the defence shows its cards (doPlay opens them the moment it is down).
 function startPlay(g) {
   const leader = (g.dealer + 1) % 3;
-  const [d1, d2] = defendersOf(g);
-  const open = g.contract.misere ? leader !== g.declarer
-    : (!g.contract.raspas && g.openOnHalfWhist && g.whistDecl[d1] !== g.whistDecl[d2]);
-  if (open) for (const d of defendersOf(g)) g.openHands[d] = true;
+  // A light whist has already turned the hands over (doLight); what is left to
+  // decide here is misère, where they go down as the first card is played.
+  if (g.contract.misere && leader !== g.declarer)
+    for (const d of defendersOf(g)) g.openHands[d] = true;
   g.phase = 'play';
   g.trickLead = leader;
   g.turn = leader;
