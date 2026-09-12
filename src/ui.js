@@ -37,11 +37,6 @@ function backEl(cls = '') {
 }
 const suitGap = () => Object.assign(document.createElement('div'), { className: 'suitgap' });
 
-// Card sizes come from CSS so they can scale with the window; read them back
-// rather than hard-coding, or the overlap of a long suit goes wrong.
-const cssPx = (name, fallback) =>
-  parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || fallback;
-
 function bySuitRows(cards) {
   const rows = [];
   for (const c of cards) {
@@ -108,23 +103,26 @@ function renderSeat(seat) {
       for (const row of bySuitRows(shown)) {
         const line = document.createElement('div');
         line.className = 'suitrow';
+        open.append(line);
+        const cards = row.map((c) => (mine
+          ? cardEl(c, view.legal.includes(c) ? 'playable' : 'dim',
+              view.legal.includes(c) ? (x) => table.send({ type: 'play', card: x }) : null)
+          : cardEl(c)));
+        line.append(cards[0]);
         // A long suit is squeezed into an overlap so it stays a single row, the
         // way a hand is held. What must fit is the whole row — (n-1) steps and
         // one full card at the end — so the step comes off the room left after
-        // that last card, not off the room divided by the count.
-        const cw = cssPx('--card-open-w', 40);
+        // that last card, not off the room divided by the count. The card is
+        // measured rather than read off --card-open-w: that one is a clamp(),
+        // and a clamp() comes back as its own text, not as pixels.
+        const cw = cards[0].getBoundingClientRect().width || 40;
         const step = row.length > 1
           ? Math.max(12, Math.min(cw + 3, (room - cw) / (row.length - 1)))
           : cw;
-        row.forEach((c, i) => {
-          const card = mine
-            ? cardEl(c, view.legal.includes(c) ? 'playable' : 'dim',
-                view.legal.includes(c) ? (x) => table.send({ type: 'play', card: x }) : null)
-            : cardEl(c);
-          if (i) card.style.marginLeft = `${step - cw}px`;
+        cards.slice(1).forEach((card) => {
+          card.style.marginLeft = `${step - cw}px`;
           line.append(card);
         });
-        open.append(line);
       }
       return;
     }
