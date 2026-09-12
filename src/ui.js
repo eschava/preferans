@@ -14,7 +14,11 @@ let bidDismissed = null;     // state key the user closed the popup on, so it st
 let pulkaShownFor = 0;       // deal whose result has already been popped up
 let pulkaOpenedOn = 0;       // deal the score-sheet popup was opened on
 let askMode = null;          // what the small popup is currently asking
-const SHEET_DELAY = 3500;    // pause before the score sheet covers the finished deal
+// A finished deal is not thrown open at once: the last trick stays on the table
+// for a moment, then the hands go face up, then the sheet comes over the top.
+const REVEAL_DELAY = 2500, SHEET_DELAY = REVEAL_DELAY + 2000;
+let revealedFor = 0;         // deal whose hands have been turned over
+let revealTimer = null;
 let mainTable = null;        // the real game, parked while a replay is on screen
 let mainView = null;
 
@@ -89,11 +93,11 @@ function renderSeat(seat) {
   if (!mine) {
     el.innerHTML = `<div class="name">${playerName(view, seat)}${bot}${waitingOn}</div>${stake}` +
       (showTricks ? `<div class="tag">${t('seat.tricks', { n: view.tricks[seat] })}</div>` : '');
-    const shown = view.dealt ? view.dealt[seat] : view.hands[seat];
+    const shown = dealt() ? dealt()[seat] : view.hands[seat];
     if (shown) {                                   // cards face up on the table
       const mine = view.playFor === seat;
       el.insertAdjacentHTML('beforeend',
-        `<div class="open-label">${t(view.dealt ? 'seat.dealt'
+        `<div class="open-label">${t(dealt() ? 'seat.dealt'
           : mine ? 'seat.youPlayIt' : 'seat.open')}</div>`);
       const open = document.createElement('div');
       open.className = 'opencards';
@@ -132,7 +136,7 @@ function renderSeat(seat) {
   box.className = 'cards';
   const canPlay = view.playFor === seat;
   let prevSuit = null;
-  for (const c of (view.dealt ? view.dealt[seat] : view.hands[seat])) {
+  for (const c of (dealt() ? dealt()[seat] : view.hands[seat])) {
     if (prevSuit && suitOf(c) !== prevSuit) box.append(suitGap());
     prevSuit = suitOf(c);
     if (view.phase === 'talon' && view.turn === seat) {
@@ -157,7 +161,7 @@ function renderCenter() {
     if (view.talon) view.talon.forEach((c) => talonRow.append(c ? cardEl(c) : backEl()));
     else { talonRow.append(backEl()); talonRow.append(backEl()); }
   }
-  if (view.dealt && view.discard.length) {
+  if (dealt() && view.discard.length) {
     talonRow.insertAdjacentHTML('beforeend', `<span>&nbsp;${t('table.discard')}</span>`);
     view.discard.forEach((c) => talonRow.append(cardEl(c)));
   }
@@ -340,6 +344,9 @@ function openClaim() {
 
 const canClaim = () => view.phase === 'play' && !!view.claim && view.actor === view.you
   && !view.claim.agreed[view.you];
+// The hands as dealt, but only once the pause after the last trick is over.
+const dealt = () => (view.dealt && revealedFor === view.deal ? view.dealt : null);
+
 const canBid = () => view.phase === 'bidding' && view.turn === view.you;
 const canWhist = () => view.phase === 'whist' && view.turn === view.you;
 const canDeclare = () => view.phase === 'talon' && view.turn === view.you && discardSel.length === 2;
@@ -463,9 +470,9 @@ function render(v) {
   $('status').textContent = v.replay ? t('app.replay')
     : t('app.status', { deal: v.deal, target: v.poolTarget });
   $('status').classList.toggle('replay', !!v.replay);
-  $('table').classList.toggle('wide-seats', [0, 1, 2].some((i) => i !== v.you && (v.dealt || v.hands[i])));
+  $('table').classList.toggle('wide-seats', [0, 1, 2].some((i) => i !== v.you && (dealt() || v.hands[i])));
   // a finished deal puts every hand on the table at once: a narrow screen sizes for it
-  $('table').classList.toggle('reveal', !!v.dealt);
+  $('table').classList.toggle('reveal', !!dealt());
   [0, 1, 2].forEach(renderSeat);
   renderCenter();
   renderLog();
@@ -482,10 +489,21 @@ function render(v) {
   if (askMode === 'claim' && !canClaim()) { askMode = null; askdlg.close(); }
   if (!askMode && canClaim()) openClaim();
 
+  const over = v.phase === 'deal_end' || v.phase === 'game_over';
+  if (over && v.dealt && revealedFor !== v.deal && !revealTimer) {
+    const deal = v.deal;                       // whatever happens next, this is the deal it opens
+    revealTimer = setTimeout(() => {           // the last trick has had its moment
+      revealTimer = null;
+      if (view.deal !== deal) return;          // moved on already: the next deal gets its own pause
+      revealedFor = deal;
+      render(view);
+    }, REVEAL_DELAY);
+  }
+
   if (pulkadlg.open && v.deal !== pulkaOpenedOn) pulkadlg.close();   // new deal, drop the sheet
   else if (pulkadlg.open) openPulka();
-  else if ((v.phase === 'deal_end' || v.phase === 'game_over') && !v.replay && pulkaShownFor !== v.deal) {
-    pulkaShownFor = v.deal;                    // long enough to read the last trick and the hands
+  else if (over && !v.replay && pulkaShownFor !== v.deal) {
+    pulkaShownFor = v.deal;                    // after the hands, long enough to read them
     setTimeout(() => {
       if (view.phase === 'deal_end' || view.phase === 'game_over') openPulka();
     }, SHEET_DELAY);
@@ -790,6 +808,7 @@ function endReplay() {
 
 // The log and the popups belong to whatever table is on screen.
 function freshScreen() {
+  clearTimeout(revealTimer); revealTimer = null; revealedFor = 0;
   logLines = []; logSeen = -1; logDeal = 0; discardSel = []; pulkaShownFor = 0;
   bidMode = null; askMode = null; bidDismissed = null;
 }
