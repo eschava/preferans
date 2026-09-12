@@ -142,6 +142,9 @@ main { display: grid; grid-template-columns: 1fr var(--side-w); gap: 14px; align
 #trick .slot.right { right: 0; top: 0; }
 #trick .slot.me    { left: 50%; bottom: 0; transform: translateX(-50%); }
 #talon, #lasttrick { display: flex; gap: 6px; align-items: center; font-size: 12px; opacity: .85; }
+/* Who took the trick appears and disappears between tricks; its line stays, or
+   everything below it shifts up and down for the whole deal. */
+#lasttrick { min-height: 1.4em; }
 #talon[hidden] { display: none; }
 .raspas {
   background: var(--accent); color: var(--ink); font-weight: 700; font-size: 12px;
@@ -254,6 +257,18 @@ dialog .row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-e
      bid, and a shade off the cards. */
   #table.wide-seats .seat.opp .tag.empty { display: none; }
   :root { --card-open-w: 30px; }        /* the layout code reads this off :root */
+  /* The table holds its size for the whole deal. Otherwise every card played
+     shrinks it and drags the status bar up the screen, which on a phone is the
+     one thing that should stay put. A screenful, and never less than a full
+     hand needs — the card size decides that, not the viewport. */
+  #table { min-height: max(calc(100dvh - 170px), calc(var(--card-w) * 12.5)); }
+  /* Same reasoning inside a hand played face up: keep room for its four suit
+     rows, so a misère does not fold up as it is played out. */
+  .opencards { min-height: calc(var(--card-open-w) * 5.9); }
+  /* And in your own hand, which is what really moves: ten cards wrap to three
+     rows on a phone and one card to a single row. Keep the three. */
+  .seat.me .cards { min-height: calc(var(--card-w) * 4.2 + 12px); }
+
   /* A finished deal shows everything at once — three hands as dealt, the talon,
      the discard, the last trick — so on a phone the cards step down a size and
      the whole deal lands on one screen instead of trailing off the bottom. */

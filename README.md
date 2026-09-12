@@ -157,6 +157,11 @@ costs under a millisecond in the ordinary case.
 In an all-pass deal the talon stays on the table: the face-up card is shown
 large, next to an ALL PASS badge and a hint of which suit must be led.
 
+On a phone the table keeps its size for the whole deal: the room for your own
+cards is reserved for all ten, a face-up hand keeps its four suit rows, and the
+"took the trick" line holds its place while empty. Otherwise every card played
+pulls the status bar up the screen.
+
 On a desktop the table takes the whole window, and the size of the cards, the
 side panels and the log column scale with its width (CSS `clamp` on `vw`), so a
 big screen gets big cards while a phone keeps what it had.
