@@ -228,7 +228,14 @@ const server = http.createServer(async (req, res) => {
   const rel = normalize(url.pathname === '/' ? '/index.html' : url.pathname).replace(/^(\.\.[/\\])+/, '');
   try {
     const buf = await readFile(join(ROOT, rel));
-    res.writeHead(200, { 'content-type': TYPES[extname(rel)] || 'application/octet-stream' });
+    // Nothing here is fingerprinted, so a browser holding one file from before a
+    // deploy and another from after it renders a page that never existed: an old
+    // index.html with today's stylesheet, say. Everything is a few kilobytes;
+    // revalidating each time is cheaper than that.
+    res.writeHead(200, {
+      'content-type': TYPES[extname(rel)] || 'application/octet-stream',
+      'cache-control': 'no-cache',
+    });
     res.end(buf);
   } catch {
     res.writeHead(404).end('not found');

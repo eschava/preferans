@@ -169,6 +169,7 @@ dialog {
 #biddlg, #askdlg {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   margin: 0; max-width: 100%; box-shadow: 0 10px 40px #000b;
+  z-index: 9;                          /* over the cards it covers, under a confirmation */
 }
 #askdlg { z-index: 10; max-width: 360px; }
 #asktext { opacity: .85; font-size: 14px; }

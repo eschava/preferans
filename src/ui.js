@@ -257,6 +257,7 @@ function openBidDialog(mode, { title, minRank, onPick, extra, repeat }) {
   bidMode = mode;
   $('bidtitle').innerHTML = title;
   const grid = $('bidstrip');
+  grid.className = 'ladder';     // set here too, so a stale index.html still lays out
   grid.innerHTML = '';
   const suits = allContracts().filter((c) => c.level === 6).map((c) => c.suit);
 
