@@ -295,9 +295,15 @@ goes too. Reading a table it cannot see is all a bot has, and guessing at deals
 the play has already ruled out is worse than not guessing — it is what let a
 defence lead a suit the declarer had shown void in, handing over a free discard.
 
-The number of samples tunes itself to a time budget: one sample costs the better
-part of a second on the first trick and about 2 ms on the fourth, so by the end
-of a deal the bot fits in 20+ samples and plays essentially perfectly. In the
+The number of samples tunes itself, but the floor is **a count of samples, not a
+slice of time**: at least 16, and only a 2-second ceiling may give fewer. One or
+two sampled worlds is a coin toss — a defender holding K J behind the ace drops
+the king 30 times in 40 at one sample, 10 at eight and **none** at sixteen — and
+with a time floor the same deals would be played worse on a slower machine, not
+merely later, which is exactly what the free hosting does. A sample costs about
+1.1 s on the first trick, 140 ms on the second and 2 ms on the fifth, so the
+price is all at the start: the first trick runs into the ceiling (~2 s), the
+second takes its sixteen (~1.3 s), and the rest is nearly free. In the
 local game that search runs in a Web Worker, so the first trick no longer freezes
 the page while it thinks; online the server does the thinking anyway.
 

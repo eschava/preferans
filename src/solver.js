@@ -353,9 +353,17 @@ export function declarerTricks(hand, trump, { samples = 12, declarer = 0 } = {})
 }
 
 // Sampling is self-tuning: run one determinization, see how long it took, then
-// fit as many more as the time budget allows. Early tricks are expensive and get
-// few samples; from the middle of the deal the search is nearly free.
+// fit as many more as it can afford. Early tricks are expensive and get few
+// samples; from the middle of the deal the search is nearly free.
+//
+// The floor is a number of samples rather than a slice of time, because one or
+// two sampled worlds is a coin toss — a defender holding K J behind the ace
+// drops the king 30 times in 40 at one sample, 10 at eight and never at
+// sixteen — and a slower machine should play the same cards, only later, not
+// worse ones. CEILING_MS is what keeps the first trick, where a single sample
+// costs about a second, from turning into a wait.
 let budgetMs = 250;
+const MIN_SAMPLES = 16, CEILING_MS = 2000;
 export const setPlayBudget = (ms) => { budgetMs = ms; };
 
 export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
@@ -388,9 +396,11 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
   let planned = samples || 64;
   const started = Date.now();
   for (let s = 0; s < planned; s++) {
+    if (!samples && s > 0 && Date.now() - started > CEILING_MS) break;   // never mind the plan
     if (!samples && s === 1) {
       const spent = Math.max(1, Date.now() - started);
-      planned = Math.max(1, Math.min(24, Math.floor(budgetMs / spent)));
+      planned = Math.min(24, Math.max(MIN_SAMPLES, Math.floor(budgetMs / spent)));
+      if (planned * spent > CEILING_MS) planned = Math.max(1, Math.floor(CEILING_MS / spent));
     }
     const hands = dealHidden(v, pool.slice());
     const tt = new Map();                        // shared by every root move of this sample
