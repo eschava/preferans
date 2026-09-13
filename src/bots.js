@@ -114,7 +114,8 @@ export function chooseDeclare(v) {
   // made 98 contracts and went short 46, against 77 and 67 for rounding to the
   // nearest, for the same pool — the mountain halved, and the settlement went
   // from -2592 to -1130.
-  const dd = declarerTricks(best.kept, best.trump, { samples: 8, declarer: v.you });
+  const dd = declarerTricks(best.kept, best.trump,
+    { samples: 8, declarer: v.you, leader: (v.dealer + 1) % 3 });
   const level = Math.max(best.min, Math.min(10, Math.max(6, Math.floor(dd))));
   return { type: 'declare', discard: best.discard, contract: { level, suit: best.contract.suit } };
 }

@@ -357,7 +357,7 @@ export function ddValue({ hands, turn, trump, countSeats, maxSeats }) {
 // How many tricks a declaring hand takes double dummy, averaged over sampled
 // opponent hands. estimateTricks is one linear fit over every hand shape, so it
 // flattens the ends of the range: hands that take nine came out as seven.
-export function declarerTricks(hand, trump, { samples = 12, declarer = 0 } = {}) {
+export function declarerTricks(hand, trump, { samples = 12, declarer = 0, leader = null } = {}) {
   const known = new Set(hand);
   const pool = makeDeck().filter((c) => !known.has(c));
   const [d1, d2] = [1, 2].map((k) => (declarer + k) % 3);
@@ -368,7 +368,10 @@ export function declarerTricks(hand, trump, { samples = 12, declarer = 0 } = {})
     hands[declarer] = hand;
     hands[d1] = pool.slice(0, 10);
     hands[d2] = pool.slice(10, 20);
-    total += ddValue({ hands, turn: d1, trump, countSeats: [declarer], maxSeats: [declarer] });
+    // Who opens matters: a declarer on lead can draw the trumps before a
+    // defender ever gets to lead through them, and counting every hand as if a
+    // defender opened is how one that was worth all ten came to be named at nine.
+    total += ddValue({ hands, turn: leader ?? d1, trump, countSeats: [declarer], maxSeats: [declarer] });
   }
   return total / samples;
 }
