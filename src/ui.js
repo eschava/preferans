@@ -875,6 +875,13 @@ function freshScreen() {
   bidMode = null; askMode = null; bidDismissed = null;
 }
 
+// The seat columns widen over 200ms when hands go face up, and the cards inside
+// are laid out against the width measured at that moment — the old, narrow one.
+// Lay them out again once the panel has finished moving.
+$('table').addEventListener('transitionend', (e) => {
+  if (e.propertyName === 'grid-template-columns' && view) render(view);
+});
+
 // Only the table on screen may draw: a replay parks the real one, and an online
 // room goes on streaming states that must not reach the page.
 const attach = (tbl) => tbl.onState((v) => { if (tbl === table) render(v); });
