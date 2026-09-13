@@ -102,7 +102,11 @@ main { display: grid; grid-template-columns: 1fr var(--side-w); gap: 14px; align
 }
 #seat0 { grid-area: me; }
 
-.seat { padding: 6px 8px; border-radius: 10px; background: #0003; }
+/* min-width: 0 stops a grid column from swelling to its content: without it a
+   panel is as wide as its widest row of cards, the row is laid out to fit the
+   panel, and the two chase each other — cards packed tight inside a panel with
+   room to spare. */
+.seat { padding: 6px 8px; border-radius: 10px; background: #0003; min-width: 0; }
 .seat.turn { outline: 2px solid var(--accent); }
 .seat .name { font-weight: 600; }
 .seat .tag { font-size: 12px; opacity: .8; font-weight: 400; }
