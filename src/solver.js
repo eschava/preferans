@@ -308,6 +308,27 @@ export function forcedSplit(v, { maxLayouts = 1500 } = {}) {
   return split;
 }
 
+// The declarer's highest trump, when it is the highest left anywhere and the
+// defence holds exactly one — the card that draws the last trump without ever
+// losing the trick it is played to, and with no ruff left to save trumps for.
+// Null in every other case: two trumps out is a plan, not a free move, and
+// measured as one — over two sets of deals, drawing whatever was out cost the
+// declarer two made contracts on one set and gained three on the other, while
+// taking only the last one lost nothing on either.
+function leadingTrumpToDraw(v, me, legal) {
+  const trump = trumpOf(v.contract);
+  if (!trump || me !== v.declarer || v.trick.length) return null;
+  const seen = new Set([...(v.playedCards || []), ...v.trick.map((p) => p.card),
+    ...(Array.isArray(v.talon) ? v.talon : []).filter(Boolean),
+    ...(Array.isArray(v.discard) ? v.discard : []).filter((c) => c && c.length > 1)]);
+  const mine = legal.filter((c) => suitOf(c) === trump);
+  if (!mine.length) return null;
+  const best = mine.reduce((hi, c) => (rankIdx(c) > rankIdx(hi) ? c : hi));
+  const out = RANKS.map((r) => trump + r).filter((c) => !seen.has(c) && !v.hands[me].includes(c));
+  if (out.length !== 1) return null;                   // only the very last one
+  return out.every((c) => rankIdx(c) < rankIdx(best)) ? best : null;
+}
+
 // ---- entry point ------------------------------------------------------------
 
 function goalOf(v, me) {
@@ -442,13 +463,24 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
   // blundered, and keeping the big one costs nothing the search can see. Not on
   // misère or an all-pass deal, where a high card is a liability, not an asset.
   const keepLow = !v.contract.misere && !v.contract.raspas;
+
+  // A tie is also the moment to pull the last trumps. Sampling cannot see the
+  // difference: a side ace is only ruffed in the rare layout where the hand
+  // holding the outstanding trump is void in that suit — about one deal in
+  // sixty — so both cards average the same and the ruff, when it comes, costs a
+  // whole trick. Leading the master trump can never lose the trick it is played
+  // to, so when the search says the two are worth the same, take the safe one.
+  const masterTrump = leadingTrumpToDraw(v, me, legal);
+
   let bestCard = legal[0], bestVal = maximizing ? -Infinity : Infinity;
   for (const c of legal) {
     const val = totals.get(c);
     const better = maximizing ? val > bestVal : val < bestVal;
-    const sameButSmaller = keepLow && val === bestVal
+    const tied = val === bestVal;
+    const drawsTrumps = tied && c === masterTrump && bestCard !== masterTrump;
+    const sameButSmaller = tied && keepLow && bestCard !== masterTrump
       && suitOf(c) === suitOf(bestCard) && rankIdx(c) < rankIdx(bestCard);
-    if (better || sameButSmaller) { bestVal = val; bestCard = c; }
+    if (better || drawsTrumps || sameButSmaller) { bestVal = val; bestCard = c; }
   }
   return bestCard;
 }

@@ -309,6 +309,15 @@ second takes its sixteen (~1.3 s), and the rest is nearly free. In the
 local game that search runs in a Web Worker, so the first trick no longer freezes
 the page while it thinks; online the server does the thinking anyway.
 
+Another tie goes to the **last trump**: with exactly one trump out against the
+declarer and the master in hand, that is the card led. It cannot lose the trick
+it is played to, and sampling cannot see the difference — a side ace is only
+ruffed in the rare layout where the hand holding that trump is void in the suit,
+about one deal in sixty, so the two cards average the same and the ruff, when it
+comes, costs a whole trick. Drawing *whatever* is out is not the same rule: over
+two sets of deals it cost the declarer two made contracts on one and gained
+three on the other, because it sometimes spends a trump that was needed to ruff.
+
 Where several cards come out equal, the **smallest of its suit** wins the tie:
 to the rest of the deal it is the same card, but a bot that throws a king where
 a seven would do looks like it has blundered. Over 40 deals a third hand that
