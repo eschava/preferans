@@ -15,8 +15,8 @@ let pulkaShownFor = 0;       // deal whose result has already been popped up
 let pulkaOpenedOn = 0;       // deal the score-sheet popup was opened on
 let askMode = null;          // what the small popup is currently asking
 // A finished deal is not thrown open at once: the last trick stays on the table
-// for a moment, then the hands go face up, then the sheet comes over the top.
-const REVEAL_DELAY = 2500, SHEET_DELAY = REVEAL_DELAY + 2000;
+// for a moment, and then the hands and the score sheet arrive together.
+const REVEAL_DELAY = 2500, SHEET_DELAY = REVEAL_DELAY;
 let revealedFor = 0;         // deal whose hands have been turned over
 let revealTimer = null;
 let mainTable = null;        // the real game, parked while a replay is on screen

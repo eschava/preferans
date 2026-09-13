@@ -110,8 +110,7 @@ marked ↺, and misère asks for confirmation, as starting a new game mid-match
 does.
 
 The end of a deal is not thrown open at once: the last trick lies there for two
-and a half seconds, then the hands go face up, and two seconds after that the
-score sheet arrives. The sheet is hidden by default and a menu item opens it. The drawing is the classic one — a vertical from the top down to the
+and a half seconds, and then the hands and the score sheet arrive together. The sheet is hidden by default and a menu item opens it. The drawing is the classic one — a vertical from the top down to the
 box holding the pool target, two rays from the box down to the base of a
 trapezoid giving three sectors; narrow columns hug the side sectors, and beyond
 them lie the whist zones, two per player. The wide sector records the
