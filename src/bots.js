@@ -79,9 +79,12 @@ export function chooseDeclare(v) {
     const kept = hand.filter((c) => !discard.includes(c));
     const est = expectedTricks(kept, trump);
     const want = Math.min(10, Math.max(6, Math.round(est)));
-    let level = want;
-    while (level < 10 && contractRank({ level, suit }) < contractRank(v.highBid)) level++;
-    return { discard, kept, trump, est, level, paid: level - want, contract: { level, suit } };
+    // The floor is the auction and nothing else: the cheapest level of this suit
+    // that still honours the winning bid.
+    let min = 6;
+    while (min < 10 && contractRank({ level: min, suit }) < contractRank(v.highBid)) min++;
+    const level = Math.max(want, min);
+    return { discard, kept, trump, est, level, min, paid: level - want, contract: { level, suit } };
   };
 
   let best = plan(bestTrump(hand)[0]);
@@ -97,14 +100,12 @@ export function chooseDeclare(v) {
       .filter((p) => contractRank(p.contract) >= contractRank(v.highBid))
       .sort((a, b) => slack(b) - slack(a))[0];
   }
-  // estimateTricks picks the trump well enough, but its level comes from one
-  // linear fit over every hand shape, and a single line flattens the top of the
-  // range: hands that went on to take nine were declared at seven. Double dummy
-  // is honest here — the defence it plays against is perfect too, and over 60
-  // played deals actual ≈ 0.9*dd + 0.96 (scripts/calibrate-dd.mjs). Taken at
-  // face value it costs 0.10 undertricks a deal on hands worth seven or more
-  // and saves 0.9 of a trick the old fit threw away. The heuristic level stays
-  // as the floor: the auction already fixed that.
+  // The linear fit picks the trump well enough, but it is no judge of how high
+  // to go: one line over every hand shape flattens both ends of the range. Here
+  // the count is double dummy, and it decides the level outright — the only
+  // floor is the auction. Letting the fit's own wish be a floor as well is how a
+  // hand the search counted at six came to be declared at eight.
+  //
   // Round DOWN, not to the nearest: a hand worth six and a half takes seven
   // about half the time, and the two outcomes are not worth the same. Making it
   // fills the pool by the game's value; falling one short writes that value into
@@ -114,7 +115,7 @@ export function chooseDeclare(v) {
   // nearest, for the same pool — the mountain halved, and the settlement went
   // from -2592 to -1130.
   const dd = declarerTricks(best.kept, best.trump, { samples: 8, declarer: v.you });
-  const level = Math.max(best.contract.level, Math.min(10, Math.max(6, Math.floor(dd))));
+  const level = Math.max(best.min, Math.min(10, Math.max(6, Math.floor(dd))));
   return { type: 'declare', discard: best.discard, contract: { level, suit: best.contract.suit } };
 }
 

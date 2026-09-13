@@ -333,7 +333,8 @@ heuristic it wins 33 matches out of 48 over four seeds, about +70 points a match
 
 The contract is not guessed either: at the talon the bot counts what the hand
 takes with the **same double-dummy search**, over sampled opponent hands, and
-declares that — rounded **down**, because a hand worth six and a half takes seven
+declares that, with the auction as the only floor under it — not the linear
+fit's own ambition. Rounded **down**, because a hand worth six and a half takes seven
 about half the time, and the two outcomes do not weigh the same: a game made
 fills the pool, a game one short writes its value into the mountain, which the
 settlement counts ten times over. Over three sets of sixty deals, rounding down
