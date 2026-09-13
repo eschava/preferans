@@ -417,6 +417,7 @@ function openBid() {
 }
 
 function openDeclare() {
+  bidDismissed = null;                       // asked for, so it stays until closed again
   const send = (contract) => table.send({ type: 'declare', discard: discardSel.slice(), contract });
   if (view.highBid.misere) {                 // misère cannot be abandoned, only discarded for
     bidMode = 'declare';
@@ -542,7 +543,11 @@ function render(v) {
   if (bidMode === 'bid' && !canBid()) { bidMode = null; biddlg.close(); }
   if (bidMode === 'declare' && !canDeclare()) { bidMode = null; biddlg.close(); askdlg.close(); }
   if (!bidMode && canBid() && bidDismissed !== bidKey()) openBid();
-  if (!bidMode && canDeclare()) openDeclare();
+  // Declaring cannot be skipped, but the popup can: closing it leaves the table
+  // in view — to look the hand over, or to pick a different discard — and the
+  // action bar's own button brings the ladder back. Without this it reopened on
+  // the very next render, and Close looked broken.
+  if (!bidMode && canDeclare() && bidDismissed !== bidKey()) openDeclare();
   if (askMode === 'whist' && !canWhist()) { askMode = null; askdlg.close(); }
   if (!askMode && canWhist()) openWhist();
   if (askMode === 'light' && !canLight()) { askMode = null; askdlg.close(); }
