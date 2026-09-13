@@ -463,9 +463,16 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
   // Ties go to the smallest card of the suit. The search rates them the same —
   // often they are the same card as far as the rest of the deal is concerned —
   // but a bot that throws a king where a seven would do looks like it has
-  // blundered, and keeping the big one costs nothing the search can see. Not on
-  // misère or an all-pass deal, where a high card is a liability, not an asset.
-  const keepLow = !v.contract.misere && !v.contract.raspas;
+  // blundered, and keeping the big one costs nothing the search can see.
+  //
+  // Where tricks are a liability the reasoning runs the other way: a declarer on
+  // misère, and everybody in an all-pass deal, wants the dangerous card gone
+  // while it is free to lose. The defence on a misère is not in that boat — its
+  // big cards are what put the declarer back on lead — and treating misère as
+  // one case is how a defender threw the queen of diamonds under an ace with the
+  // eight in hand, and with it the only trick the defence could force.
+  const shedHigh = v.contract.raspas || (v.contract.misere && me === v.declarer);
+  const keepLow = !shedHigh;
 
   // A tie is also the moment to pull the last trumps. Sampling cannot see the
   // difference: a side ace is only ruffed in the rare layout where the hand
@@ -481,9 +488,10 @@ export function bestCard(v, { samples = 0, ttLimit = 400000 } = {}) {
     const better = maximizing ? val > bestVal : val < bestVal;
     const tied = val === bestVal;
     const drawsTrumps = tied && c === masterTrump && bestCard !== masterTrump;
-    const sameButSmaller = tied && keepLow && bestCard !== masterTrump
-      && suitOf(c) === suitOf(bestCard) && rankIdx(c) < rankIdx(bestCard);
-    if (better || drawsTrumps || sameButSmaller) { bestVal = val; bestCard = c; }
+    const sameSuit = tied && bestCard !== masterTrump && suitOf(c) === suitOf(bestCard);
+    const sameButBetter = sameSuit
+      && (keepLow ? rankIdx(c) < rankIdx(bestCard) : rankIdx(c) > rankIdx(bestCard));
+    if (better || drawsTrumps || sameButBetter) { bestVal = val; bestCard = c; }
   }
   return bestCard;
 }
