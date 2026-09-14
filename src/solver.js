@@ -357,23 +357,34 @@ export function ddValue({ hands, turn, trump, countSeats, maxSeats }) {
 // How many tricks a declaring hand takes double dummy, averaged over sampled
 // opponent hands. estimateTricks is one linear fit over every hand shape, so it
 // flattens the ends of the range: hands that take nine came out as seven.
-export function declarerTricks(hand, trump, { samples = 12, declarer = 0, leader = null } = {}) {
-  const known = new Set(hand);
+export function declarerTricks(hand, trump, opts = {}) {
+  return keepTricks([hand], trump, { ...opts, seen: hand })[0];
+}
+
+// The same count for several ways of keeping ten cards out of the twelve, all
+// on the same sampled worlds, so the choice between them is not a choice
+// between luckier and unluckier deals. `seen` is every card the declarer knows
+// is not with the defence: with the whole twelve it is exactly their twenty,
+// and a discarded card no longer turns up in a defender's hand.
+export function keepTricks(keeps, trump, { samples = 12, declarer = 0, leader = null, seen = keeps[0] } = {}) {
+  const known = new Set(seen);
   const pool = makeDeck().filter((c) => !known.has(c));
   const [d1, d2] = [1, 2].map((k) => (declarer + k) % 3);
-  let total = 0;
+  const totals = keeps.map(() => 0);
   for (let s = 0; s < samples; s++) {
     shuffle(pool);
-    const hands = [];
-    hands[declarer] = hand;
-    hands[d1] = pool.slice(0, 10);
-    hands[d2] = pool.slice(10, 20);
-    // Who opens matters: a declarer on lead can draw the trumps before a
-    // defender ever gets to lead through them, and counting every hand as if a
-    // defender opened is how one that was worth all ten came to be named at nine.
-    total += ddValue({ hands, turn: leader ?? d1, trump, countSeats: [declarer], maxSeats: [declarer] });
+    keeps.forEach((hand, i) => {
+      const hands = [];
+      hands[declarer] = hand;
+      hands[d1] = pool.slice(0, 10);
+      hands[d2] = pool.slice(10, 20);
+      // Who opens matters: a declarer on lead can draw the trumps before a
+      // defender ever gets to lead through them, and counting every hand as if a
+      // defender opened is how one that was worth all ten came to be named at nine.
+      totals[i] += ddValue({ hands, turn: leader ?? d1, trump, countSeats: [declarer], maxSeats: [declarer] });
+    });
   }
-  return total / samples;
+  return totals.map((t) => t / samples);
 }
 
 // Sampling is self-tuning: run one determinization, see how long it took, then

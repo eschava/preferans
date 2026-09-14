@@ -1,6 +1,6 @@
 // Bot policies. They only ever see viewFor(seat) — no peeking at other hands.
 import { SUITS, rankIdx, suitOf, trumpOf, contractRank, allContracts, mustWhist, WHIST_DUTY } from './engine.js';
-import { bestCard, declarerTricks, forcedSplit } from './solver.js';
+import { bestCard, keepTricks, forcedSplit } from './solver.js';
 
 const bySuit = (hand, s) => hand.filter((c) => suitOf(c) === s);
 
@@ -114,10 +114,24 @@ export function chooseDeclare(v) {
   // made 98 contracts and went short 46, against 77 and 67 for rounding to the
   // nearest, for the same pool — the mountain halved, and the settlement went
   // from -2592 to -1130.
-  const dd = declarerTricks(best.kept, best.trump,
-    { samples: 8, declarer: v.you, leader: (v.dealer + 1) % 3 });
+  //
+  // The discard is settled the same way. pickDiscard scores the cards one at a
+  // time, and card by card it threw the queen from K Q and the jack from K J,
+  // leaving two bare kings under the aces. So it only proposes: its own pick,
+  // every short side suit thrown whole, and the two smallest side cards. The
+  // count chooses, and on a tie the proposal stands.
+  const side = hand.filter((c) => suitOf(c) !== best.trump);
+  const cands = [best.discard,
+    ...SUITS.filter((s) => s !== best.trump).map((s) => side.filter((c) => suitOf(c) === s))
+      .filter((cs) => cs.length === 2 && !cs.some((c) => rankIdx(c) === 7)),
+    side.slice().sort((a, b) => rankIdx(a) - rankIdx(b)).slice(0, 2)]
+    .filter((d, i, all) => d.length === 2 && all.findIndex((e) => e.every((c) => d.includes(c))) === i);
+  const scores = keepTricks(cands.map((d) => hand.filter((c) => !d.includes(c))), best.trump,
+    { samples: 8, declarer: v.you, leader: (v.dealer + 1) % 3, seen: hand });
+  const pick = scores.indexOf(Math.max(...scores));
+  const dd = scores[pick];
   const level = Math.max(best.min, Math.min(10, Math.max(6, Math.floor(dd))));
-  return { type: 'declare', discard: best.discard, contract: { level, suit: best.contract.suit } };
+  return { type: 'declare', discard: cands[pick], contract: { level, suit: best.contract.suit } };
 }
 
 // Drop the two least useful cards: never trump, prefer emptying a short side suit.
