@@ -128,8 +128,7 @@ function renderSeat(seat) {
     }
     const count = document.createElement('div');
     count.className = 'count';
-    count.append(backEl());
-    count.insertAdjacentHTML('beforeend', `<span>${view.handCounts[seat]}</span>`);
+    for (let i = 0; i < view.handCounts[seat]; i++) count.append(backEl());
     el.append(count);
     return;
   }

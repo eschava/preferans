@@ -115,7 +115,8 @@ main { display: grid; grid-template-columns: 1fr var(--side-w); gap: 14px; align
   background: var(--paper); border-radius: 5px; padding: 1px 8px; margin-top: 2px;
 }
 .seat.opp { display: flex; flex-direction: column; gap: 3px; font-size: 13px; align-self: start; }
-.seat.opp .count { display: flex; align-items: center; gap: 6px; margin-top: 2px; opacity: .9; }
+.seat.opp .count { display: flex; align-items: center; margin-top: 2px; opacity: .9; }
+.seat.opp .count .card + .card { margin-left: calc(var(--card-w) * -.32); }
 .seat.opp .count .card { width: calc(var(--card-w) * .4); }
 .seat.me .name { display: flex; gap: 8px; align-items: baseline; }
 .seat.me .cards { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; min-height: 48px; align-items: flex-end; }
