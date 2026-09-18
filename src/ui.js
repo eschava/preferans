@@ -744,7 +744,7 @@ function go() {
   remember();
   if (setupMode === 'join') {
     const code = $('setupbody').querySelector('input.code').value;
-    return code.length === 5 && joinRoom(code);
+    return code.length === 4 && joinRoom(code);
   }
   if (setupMode === 'create') return openOnline();
   if (setupMode === 'restart') {
